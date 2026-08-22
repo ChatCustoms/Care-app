@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/primary-button';
@@ -17,6 +17,7 @@ import {
 import { calculateNextFeed, getFeedStatus } from '@/features/feeds/logic';
 import { useHousehold } from '@/features/households/household-provider';
 import { formatDuration } from '@/lib/dates/format';
+import { reconcileNextFeedNotification } from '@/services/notifications/client';
 import { FeedStatus, FeedUnit } from '@/types';
 
 const STATUS_COLOR: Record<FeedStatus, string | undefined> = {
@@ -65,11 +66,35 @@ export default function TodayScreen() {
     }, [refetch])
   );
 
-  if (!careRecipient) return null;
+  // useFocusEffect only fires on navigation focus (mount, tab switch) — it
+  // does not fire when the app is merely backgrounded and foregrounded
+  // again without a navigation change. Without this, a phone that's left
+  // backgrounded (not force-quit) would never notice another caregiver
+  // logging a feed on a different device, and would fire a stale
+  // notification at the old time.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') refetch();
+    });
+    return () => subscription.remove();
+  }, [refetch]);
 
   const lastFeedAt = latestFeed ? new Date(latestFeed.fed_at) : null;
-  const nextFeedAt = calculateNextFeed(lastFeedAt, careRecipient.feed_interval_minutes);
+  const nextFeedAt = careRecipient
+    ? calculateNextFeed(lastFeedAt, careRecipient.feed_interval_minutes)
+    : null;
   const status = getFeedStatus(nextFeedAt, now);
+
+  // Deliberately keyed on the primitives nextFeedAt is derived from, not on
+  // nextFeedAt itself — a freshly-constructed Date has a new identity every
+  // render, which would refire this on every render for no reason.
+  useEffect(() => {
+    if (!careRecipient) return;
+    reconcileNextFeedNotification(careRecipient.name, nextFeedAt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [careRecipient?.id, careRecipient?.feed_interval_minutes, latestFeed?.fed_at]);
+
+  if (!careRecipient) return null;
 
   const handleLogPreset = async (preset: FeedPreset) => {
     setErrorMessage(null);

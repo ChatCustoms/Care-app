@@ -30,6 +30,19 @@ reschedule notifications. This requires an Apple Developer account and adds
 infrastructure complexity. Evaluate only if the MVP limitation causes real
 caregiving issues in practice.
 
+**Additional MVP notes (Milestone 4):**
+- If a caregiver denies the notification permission prompt, feed logging
+  still works normally — no notification is ever scheduled, and there is no
+  in-app indicator that permission was denied. The OS-level Settings app is
+  the only way to re-enable it, and doing so takes effect the next time the
+  app reconciles (launch or resume).
+- On Android, a device reboot clears all pending `AlarmManager`-backed
+  scheduled notifications. If a reboot happens while a notification is
+  pending and the app isn't reopened before the feed becomes due, that
+  notification is silently lost. Reconciliation on the next app open
+  correctly reschedules going forward. iOS does not have this issue — its
+  notification triggers persist across reboots.
+
 ---
 
 ## Widget Support
