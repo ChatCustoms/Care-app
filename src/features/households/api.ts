@@ -19,7 +19,7 @@ export async function fetchHouseholdForUser(userId: string): Promise<Household |
 }
 
 export async function createHouseholdRpc(
-  name: string,
+  name: string
 ): Promise<{ data: Household | null; error: PostgrestError | null }> {
   const { data, error } = await supabase.rpc('create_household', { household_name: name }).single();
   return { data: data ?? null, error };

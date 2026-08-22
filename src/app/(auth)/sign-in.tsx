@@ -56,7 +56,12 @@ export default function SignInScreen() {
               {errorMessage}
             </ThemedText>
           ) : null}
-          <PrimaryButton title="Sign In" onPress={handleSubmit} disabled={!canSubmit} isLoading={isSubmitting} />
+          <PrimaryButton
+            title="Sign In"
+            onPress={handleSubmit}
+            disabled={!canSubmit}
+            isLoading={isSubmitting}
+          />
         </ThemedView>
 
         <Link href="/sign-up">

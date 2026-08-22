@@ -2,7 +2,8 @@
 // Run: npx supabase gen types typescript --project-id <your-project-id> > src/lib/supabase/database.types.ts
 //
 // Hand-authored to match supabase/migrations/0001_household_and_care_recipient.sql
-// (the project isn't CLI-linked yet) — regenerate via the CLI once it is.
+// and 0002_feeding.sql (the project isn't CLI-linked yet) — regenerate via the
+// CLI once it is.
 
 type HouseholdRow = {
   id: string;
@@ -25,6 +26,27 @@ type CareRecipientRow = {
   household_id: string;
   name: string;
   date_of_birth: string | null;
+  feed_interval_minutes: number;
+  created_at: string;
+};
+
+// Postgres `numeric` comes back from supabase-js as a string, not a number,
+// to avoid float precision loss — amount is typed `string` here on purpose.
+type FeedRow = {
+  id: string;
+  care_recipient_id: string;
+  amount: string;
+  unit: string;
+  fed_at: string;
+  created_by: string;
+  created_at: string;
+};
+
+type FeedPresetRow = {
+  id: string;
+  care_recipient_id: string;
+  amount: string;
+  unit: string;
   created_at: string;
 };
 
@@ -69,6 +91,43 @@ export type Database = {
           },
         ];
       };
+      feeds: {
+        Row: FeedRow;
+        Insert: Partial<FeedRow> & {
+          care_recipient_id: string;
+          amount: string;
+          unit: string;
+          created_by: string;
+        };
+        Update: Partial<FeedRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'feeds_care_recipient_id_fkey';
+            columns: ['care_recipient_id'];
+            isOneToOne: false;
+            referencedRelation: 'care_recipients';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      feed_presets: {
+        Row: FeedPresetRow;
+        Insert: Partial<FeedPresetRow> & {
+          care_recipient_id: string;
+          amount: string;
+          unit: string;
+        };
+        Update: Partial<FeedPresetRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'feed_presets_care_recipient_id_fkey';
+            columns: ['care_recipient_id'];
+            isOneToOne: false;
+            referencedRelation: 'care_recipients';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -79,6 +138,10 @@ export type Database = {
       create_household: {
         Args: { household_name: string };
         Returns: HouseholdRow;
+      };
+      update_feed_interval_minutes: {
+        Args: { target_care_recipient_id: string; new_interval_minutes: number };
+        Returns: CareRecipientRow;
       };
     };
     Enums: Record<string, never>;

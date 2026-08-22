@@ -58,7 +58,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [session, isLoading],
+    [session, isLoading]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

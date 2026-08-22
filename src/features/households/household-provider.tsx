@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { CareRecipient, createCareRecipient, fetchCareRecipient } from '@/features/careRecipients/api';
+import {
+  CareRecipient,
+  createCareRecipient,
+  fetchCareRecipient,
+  updateFeedIntervalMinutes,
+} from '@/features/careRecipients/api';
 import { useSession } from '@/features/auth/session-provider';
 
 import { createHouseholdRpc, fetchHouseholdForUser, Household } from './api';
@@ -17,6 +22,7 @@ type HouseholdContextValue = {
   isLoading: boolean;
   createHousehold: (name: string) => Promise<MutationResult>;
   createCareRecipient: (name: string, dateOfBirth: string | null) => Promise<MutationResult>;
+  updateFeedInterval: (minutes: number) => Promise<MutationResult>;
 };
 
 const HouseholdContext = createContext<HouseholdContextValue | undefined>(undefined);
@@ -80,8 +86,14 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
         if (data) setCareRecipient(data);
         return { error };
       },
+      updateFeedInterval: async (minutes) => {
+        if (!careRecipient) return { error: new Error('No care recipient to update') };
+        const { data, error } = await updateFeedIntervalMinutes(careRecipient.id, minutes);
+        if (data) setCareRecipient(data);
+        return { error };
+      },
     }),
-    [household, careRecipient, isLoading],
+    [household, careRecipient, isLoading]
   );
 
   return <HouseholdContext.Provider value={value}>{children}</HouseholdContext.Provider>;

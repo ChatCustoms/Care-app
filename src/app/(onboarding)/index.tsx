@@ -43,7 +43,10 @@ export default function OnboardingScreen() {
     }
 
     setIsSubmitting(true);
-    const { error } = await createCareRecipient(recipientName.trim(), trimmedDob.length > 0 ? trimmedDob : null);
+    const { error } = await createCareRecipient(
+      recipientName.trim(),
+      trimmedDob.length > 0 ? trimmedDob : null
+    );
     setIsSubmitting(false);
     if (error) {
       setErrorMessage('Something went wrong adding your care recipient. Please try again.');
@@ -60,7 +63,11 @@ export default function OnboardingScreen() {
           </ThemedText>
 
           <ThemedView style={styles.form}>
-            <TextField label="Household name" value={householdName} onChangeText={setHouseholdName} />
+            <TextField
+              label="Household name"
+              value={householdName}
+              onChangeText={setHouseholdName}
+            />
             {errorMessage ? (
               <ThemedText type="small" style={styles.errorText}>
                 {errorMessage}

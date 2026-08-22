@@ -24,7 +24,10 @@ export default function SignUpScreen() {
   const handleSubmit = async () => {
     setErrorMessage(null);
     setIsSubmitting(true);
-    const { error, needsEmailConfirmation: needsConfirmation } = await signUp(email.trim(), password);
+    const { error, needsEmailConfirmation: needsConfirmation } = await signUp(
+      email.trim(),
+      password
+    );
     if (error) {
       setErrorMessage(toCalmAuthMessage(error));
       setIsSubmitting(false);
@@ -77,7 +80,12 @@ export default function SignUpScreen() {
               {errorMessage}
             </ThemedText>
           ) : null}
-          <PrimaryButton title="Sign Up" onPress={handleSubmit} disabled={!canSubmit} isLoading={isSubmitting} />
+          <PrimaryButton
+            title="Sign Up"
+            onPress={handleSubmit}
+            disabled={!canSubmit}
+            isLoading={isSubmitting}
+          />
         </ThemedView>
 
         <Link href="/sign-in">

@@ -20,7 +20,7 @@ export async function fetchCareRecipient(householdId: string): Promise<CareRecip
 export async function createCareRecipient(
   householdId: string,
   name: string,
-  dateOfBirth: string | null,
+  dateOfBirth: string | null
 ): Promise<{ data: CareRecipient | null; error: PostgrestError | null }> {
   const { data, error } = await supabase
     .from('care_recipients')
@@ -29,4 +29,18 @@ export async function createCareRecipient(
     .single();
 
   return { data, error };
+}
+
+export async function updateFeedIntervalMinutes(
+  careRecipientId: string,
+  minutes: number
+): Promise<{ data: CareRecipient | null; error: PostgrestError | null }> {
+  const { data, error } = await supabase
+    .rpc('update_feed_interval_minutes', {
+      target_care_recipient_id: careRecipientId,
+      new_interval_minutes: minutes,
+    })
+    .single();
+
+  return { data: data ?? null, error };
 }

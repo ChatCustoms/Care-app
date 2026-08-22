@@ -85,6 +85,26 @@ architecture rather than a rewrite.
 
 ---
 
+## No Editing or Deleting Logged Feeds
+
+**What the limitation is:**
+A feed, once logged (including a mis-tapped preset — e.g. logging "8 oz"
+instead of "4 oz"), cannot be edited or deleted in-app. There is no update or
+delete RLS policy on the `feeds` table.
+
+**Why it is acceptable for MVP:**
+No edit UI exists yet, and a default-deny policy is safer than granting a
+write surface for a feature that doesn't exist and can't be exercised or
+tested. A mis-logged feed skews the next-feed countdown until the next real
+feed is logged, but does not lose or corrupt other data.
+
+**Future path:**
+Add an update/delete policy (scoped the same way as `feed_presets`, via
+`is_household_member`) alongside an edit/delete UI on the Today or Timeline
+screen, once that's a real, prioritized need.
+
+---
+
 ## Single Care Recipient per Household (MVP)
 
 **What the limitation is:**
