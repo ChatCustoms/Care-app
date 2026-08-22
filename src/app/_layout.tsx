@@ -5,11 +5,16 @@ import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { SessionProvider, useSession } from '@/features/auth/session-provider';
+import { HouseholdProvider, useHousehold } from '@/features/households/household-provider';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
-  const { session, isLoading } = useSession();
+  const { session, isLoading: isSessionLoading } = useSession();
+  const { household, careRecipient, isLoading: isHouseholdLoading } = useHousehold();
+
+  const isLoading = isSessionLoading || (!!session && isHouseholdLoading);
+  const isOnboarded = !!household && !!careRecipient;
 
   useEffect(() => {
     if (!isLoading) SplashScreen.hideAsync();
@@ -20,8 +25,11 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Protected guard={!!session}>
+      <Stack.Protected guard={!!session && isOnboarded}>
         <Stack.Screen name="(app)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && !isOnboarded}>
+        <Stack.Screen name="(onboarding)" />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="(auth)" />
@@ -35,8 +43,10 @@ export default function RootLayout() {
 
   return (
     <SessionProvider>
-      <RootNavigator />
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <HouseholdProvider>
+        <RootNavigator />
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      </HouseholdProvider>
     </SessionProvider>
   );
 }

@@ -44,3 +44,4 @@ example
 
 # Supabase local config (if using supabase CLI locally)
 supabase/.env
+supabase/.temp

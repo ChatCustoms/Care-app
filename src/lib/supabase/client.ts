@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
+import { Database } from './database.types';
+
 // EXPO_PUBLIC_* variables are inlined at build time from .env.local.
 // If either is missing, the Supabase client will fail to connect —
 // create your .env.local from .env.example before running the app.
@@ -16,7 +18,7 @@ const SecureStoreAdapter = {
   removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: SecureStoreAdapter,
     autoRefreshToken: true,
