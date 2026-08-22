@@ -38,6 +38,9 @@ yarn-error.*
 
 example
 
-# generated native folders
+# generated native folders (committed once we add widget extensions)
 /ios
 /android
+
+# Supabase local config (if using supabase CLI locally)
+supabase/.env

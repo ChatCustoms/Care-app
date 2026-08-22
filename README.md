@@ -1,56 +1,137 @@
-# Welcome to your Expo app 👋
+# Care App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A shared mobile caregiving application for iPhone and Android.
 
-## Get started
+Built with React Native, Expo SDK 57, TypeScript, Expo Router, and Supabase.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Development Setup
 
-2. Start the app
+### Prerequisites
 
-   ```bash
-   npx expo start
-   ```
+- Node.js 18+
+- Xcode (for iOS Simulator and device builds)
+- Android Studio (for Android Emulator)
+- A free Supabase account at https://supabase.com
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### 1. Clone and install
 
 ```bash
-npm run reset-project
+git clone <repo-url>
+cd care-app
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Create your Supabase project
 
-### Other setup steps
+1. Go to https://supabase.com and sign in.
+2. Create a new project (choose the free tier).
+3. Once the project is ready, go to **Project Settings → API**.
+4. Copy:
+   - **Project URL** → `EXPO_PUBLIC_SUPABASE_URL`
+   - **anon / public key** → `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### 3. Configure environment variables
 
-## Learn more
+```bash
+cp .env.example .env.local
+# Edit .env.local and paste your Supabase URL and anon key
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Never commit `.env.local`. It is gitignored.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 4. Run in Expo Go (early development only)
 
-## Join the community
+```bash
+npx expo start
+```
 
-Join our community of developers creating universal apps.
+Scan the QR code with the Expo Go app on your phone, or press `i` for iOS Simulator or `a` for Android Emulator.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 5. Local development build (recommended from Milestone 1 onward)
+
+Local builds let you use native modules (notifications, widgets) that Expo Go cannot run.
+
+**iOS Simulator:**
+```bash
+npx expo run:ios
+```
+Requires Xcode installed. Compiles and installs in the iOS Simulator.
+
+**Android Emulator:**
+```bash
+npx expo run:android
+```
+Requires Android Studio and a running emulator.
+
+**Physical iPhone (free Personal Team — no Apple Developer Program required):**
+```bash
+npx expo run:ios --device
+```
+Connect your iPhone via USB. Xcode will sign with your free Personal Team certificate.
+The development build expires after 7 days; just run the command again to reinstall.
+
+### 6. Run checks
+
+```bash
+npm run lint        # ESLint
+npm run typecheck   # TypeScript (tsc --noEmit)
+npm run format      # Prettier (writes in place)
+```
+
+---
+
+## Project Structure
+
+```
+src/
+  app/              # Expo Router file-based routes
+    (auth)/         # Sign-in, sign-up (Milestone 1)
+    (app)/          # Authenticated tabs: today, timeline, summary, appointments, settings
+  components/       # Presentational React Native components (no business logic)
+  features/         # Domain logic per feature (no JSX) — feeds, diapers, medications, etc.
+  hooks/            # Custom React hooks
+  lib/
+    supabase/       # Supabase client + generated database types
+    dates/          # Timezone-aware date utilities
+  services/         # Cross-cutting services (notifications)
+  types/            # Shared TypeScript types
+  constants/        # Colors, spacing, thresholds
+  utils/            # Pure utility functions
+
+supabase/
+  migrations/       # Versioned SQL migration files (committed to Git)
+  seed/             # Optional dev seed data
+```
+
+---
+
+## Build Milestones
+
+| # | Milestone | Status |
+|---|---|---|
+| 0 | Project foundation | Done |
+| 1 | Authentication | Next |
+| 2 | Household and care recipient | |
+| 3 | Feeding MVP | |
+| 4 | Notifications | |
+| 5 | Multi-caregiver realtime | |
+| 6 | Diapers | |
+| 7 | Medications | |
+| 8 | Care notes / notable events | |
+| 9 | Timeline | |
+| 10 | Summary | |
+| 11 | Appointments | |
+| 12 | iOS Widget / Live Activity | |
+| 13 | Android Widget | |
+
+---
+
+## Key Decisions
+
+- **`EXPO_PUBLIC_*` env vars** are inlined at build time. Safe for public Supabase keys. Never use service-role keys in the app.
+- **Local scheduled notifications** only (no push infrastructure in MVP). See `KNOWN_LIMITATIONS.md`.
+- **Stable `Tabs` from `expo-router`** — not the experimental `NativeTabs` from the SDK 57 template.
+- **`supabase/migrations/`** — all schema changes go here as numbered SQL files, committed to Git.
+- **$0/month infrastructure** — Supabase free tier, local builds, no paid services.
