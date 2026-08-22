@@ -1,7 +1,8 @@
 import { Redirect } from 'expo-router';
 
-// Milestone 1 will check auth state and redirect to (auth)/sign-in if unauthenticated.
-// For now, always go to the app.
+import { useSession } from '@/features/auth/session-provider';
+
 export default function Index() {
-  return <Redirect href="/(app)/today" />;
+  const { session } = useSession();
+  return <Redirect href={session ? '/(app)/today' : '/(auth)/sign-in'} />;
 }

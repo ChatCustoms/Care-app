@@ -11,11 +11,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'automatic',
   ios: {
     icon: './assets/expo.icon',
-    // bundleIdentifier will be set when preparing for App Store distribution.
+    bundleIdentifier: 'com.stephanochatham.careapp',
     // supportsTablet: false — this is a phone-first caregiving app.
     supportsTablet: false,
   },
   android: {
+    package: 'com.stephanochatham.careapp',
     adaptiveIcon: {
       backgroundColor: '#E6F4FE',
       foregroundImage: './assets/images/android-icon-foreground.png',
@@ -23,7 +24,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
-    // package will be set when preparing for Play Store distribution.
   },
   web: {
     output: 'static',
