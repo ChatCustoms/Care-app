@@ -21,8 +21,20 @@ import { FeedUnit } from '@/types';
 
 export default function SettingsScreen() {
   const { signOut } = useSession();
-  const { household, careRecipient, updateFeedInterval } = useHousehold();
+  const {
+    household,
+    careRecipient,
+    updateFeedInterval,
+    caregivers,
+    refreshCaregivers,
+    inviteCaregiver,
+  } = useHousehold();
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
 
   const [intervalInput, setIntervalInput] = useState(
     careRecipient ? String(careRecipient.feed_interval_minutes) : ''
@@ -42,12 +54,32 @@ export default function SettingsScreen() {
       if (!careRecipient) return;
       setIntervalInput(String(careRecipient.feed_interval_minutes));
       fetchFeedPresets(careRecipient.id).then(setPresets);
+      refreshCaregivers();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [careRecipient])
   );
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
     await signOut();
+  };
+
+  const handleInvite = async () => {
+    setInviteError(null);
+    setInviteSuccess(false);
+    if (inviteEmail.trim().length === 0) {
+      setInviteError('Please enter an email address.');
+      return;
+    }
+    setIsInviting(true);
+    const { error } = await inviteCaregiver(inviteEmail.trim());
+    setIsInviting(false);
+    if (error) {
+      setInviteError(error.message);
+      return;
+    }
+    setInviteEmail('');
+    setInviteSuccess(true);
   };
 
   const handleSaveInterval = async () => {
@@ -111,6 +143,41 @@ export default function SettingsScreen() {
                 {careRecipient.date_of_birth ? ` (born ${careRecipient.date_of_birth})` : ''}
               </ThemedText>
             ) : null}
+          </ThemedView>
+        ) : null}
+
+        {household ? (
+          <ThemedView style={styles.section}>
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              Caregivers
+            </ThemedText>
+
+            {caregivers.map((caregiver) => (
+              <ThemedText key={caregiver.user_id} type="default">
+                {caregiver.email} · {caregiver.role}
+              </ThemedText>
+            ))}
+
+            <ThemedView style={styles.addPresetForm}>
+              <TextField
+                label="Invite a caregiver by email"
+                value={inviteEmail}
+                onChangeText={setInviteEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              {inviteError ? (
+                <ThemedText type="small" style={styles.errorText}>
+                  {inviteError}
+                </ThemedText>
+              ) : null}
+              {inviteSuccess ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Invite sent.
+                </ThemedText>
+              ) : null}
+              <PrimaryButton title="Send Invite" onPress={handleInvite} isLoading={isInviting} />
+            </ThemedView>
           </ThemedView>
         ) : null}
 

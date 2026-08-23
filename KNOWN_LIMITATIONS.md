@@ -10,7 +10,9 @@ accepted for now, and documented rather than prematurely solved.
 **What the limitation is:**
 Local scheduled notifications are managed on each device individually. When
 Caregiver A logs a feed, Caregiver B's device learns of the update via Supabase
-Realtime (if the app is running) or on next app launch (if the app was terminated).
+Realtime (Milestone 5, if the app is running and foregrounded/backgrounded) or
+on next app launch/resume (if the app was terminated, or Realtime is
+unreachable — e.g. a dropped/never-reconnected websocket).
 
 If Caregiver B's app is fully terminated when the feed is logged, Caregiver B's
 device will retain its previously scheduled local notification until the app is
@@ -138,11 +140,23 @@ recipient is needed.
 ## Caregiver Invitation
 
 **What the limitation is:**
-The MVP invitation flow is invite-by-email only. There is no invitation link,
-QR code, or in-app invite code.
+The invitation flow is invite-by-email only (Milestone 5). The household
+owner enters an email; if that email has no account yet, the invite waits
+(expires after 7 days) until they sign up or sign in, at which point they're
+auto-joined to the household with a fixed `caregiver` role — no manual
+"Accept" step. There is no invitation link, QR code, in-app invite code, or
+role picker (every invite grants the same role).
+
+**Why it is acceptable for MVP:**
+Every existing screen assumes one household per user, so allowing a role
+choice or multiple pending households per person would add real complexity
+for a need that hasn't come up yet. A household member can cancel a pending
+invite, but there is no "remove an existing caregiver" UI yet.
 
 **Future path:**
-Add shareable invite links if the email-only flow causes friction in practice.
+Add shareable invite links if the email-only flow causes friction in
+practice. Add a remove-caregiver flow and role differentiation
+(admin/viewer) if a real need for either emerges.
 
 ---
 

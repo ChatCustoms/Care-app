@@ -17,6 +17,7 @@ import {
 import { calculateNextFeed, getFeedStatus } from '@/features/feeds/logic';
 import { useHousehold } from '@/features/households/household-provider';
 import { formatDuration } from '@/lib/dates/format';
+import { supabase } from '@/lib/supabase/client';
 import { reconcileNextFeedNotification } from '@/services/notifications/client';
 import { FeedStatus, FeedUnit } from '@/types';
 
@@ -78,6 +79,42 @@ export default function TodayScreen() {
     });
     return () => subscription.remove();
   }, [refetch]);
+
+  // Makes the common case (another caregiver logs a feed or edits a
+  // preset while this screen is open) near-instant. The focus/resume
+  // polling above stays as a correctness fallback — a dropped or
+  // never-reconnected websocket must not mean permanently stale data.
+  useEffect(() => {
+    if (!careRecipient?.id) return;
+
+    const channel = supabase
+      .channel(`feeds-changes-${careRecipient.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'feeds',
+          filter: `care_recipient_id=eq.${careRecipient.id}`,
+        },
+        () => refetch()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'feed_presets',
+          filter: `care_recipient_id=eq.${careRecipient.id}`,
+        },
+        () => refetch()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [careRecipient?.id, refetch]);
 
   const lastFeedAt = latestFeed ? new Date(latestFeed.fed_at) : null;
   const nextFeedAt = careRecipient
