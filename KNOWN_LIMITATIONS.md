@@ -172,6 +172,41 @@ it if cross-timezone caregiving becomes a real, reported need.
 
 ---
 
+## Appointment Reminders (Milestone 11)
+
+**What the limitation is:**
+- Appointment reminders are only scheduled for appointments within a
+  14-day lookahead window (`fetchUpcomingAppointmentsForReminders`), not
+  every future appointment. iOS caps pending local notifications at 64
+  system-wide, and unlike medication doses (naturally bounded to "today"),
+  appointments have no natural bound — a household pre-booking months of
+  visits could otherwise crowd out feed/medication reminders. A far-future
+  appointment gets its reminder scheduled once it enters the 14-day
+  window on a later reconcile pass (app open/resume/realtime event), not
+  the moment it's created.
+- If an appointment is booked (or reconciliation happens to run) inside
+  its own reminder lead time (60 minutes before `scheduled_at`), the
+  reminder fires almost immediately rather than at the "natural" lead
+  time, and rather than being silently dropped.
+- There is no hard delete for appointments — cancelling sets
+  `status = 'cancelled'`, the same row-preserving pattern as
+  `medications.deactivated_at`, so appointment history (including
+  cancellations) stays intact.
+
+**Why it is acceptable for MVP:**
+The 14-day window matches the architecture's existing device-driven
+reconciliation (see "Notification Synchronization" above) rather than
+introducing a server-side scheduling job, and a 60-minute lead time isn't
+actionable for something months out regardless.
+
+**Future path:**
+If a household routinely books appointments far enough out that the
+lookahead window causes missed reminders in practice, widen the window or
+move reminder scheduling server-side (silent push, per the "Notification
+Synchronization" future path).
+
+---
+
 ## Single Care Recipient per Household (MVP)
 
 **What the limitation is:**

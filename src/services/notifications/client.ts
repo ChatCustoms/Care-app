@@ -3,6 +3,11 @@ import { Platform } from 'react-native';
 
 const FEED_CHANNEL_ID = 'feed-reminders';
 const MEDICATION_CHANNEL_ID = 'medication-reminders';
+const APPOINTMENT_CHANNEL_ID = 'appointment-reminders';
+
+// How far ahead of an appointment's scheduled_at to fire its reminder —
+// "time to leave" is the useful signal, not a same-instant ping.
+const APPOINTMENT_REMINDER_LEAD_MS = 60 * 60_000;
 
 export type MedicationDoseNotification = {
   medicationId: string;
@@ -10,10 +15,17 @@ export type MedicationDoseNotification = {
   scheduledFor: Date;
 };
 
+export type AppointmentReminder = {
+  appointmentId: string;
+  title: string;
+  scheduledFor: Date;
+};
+
 type ReconcileNotificationsInput = {
   careRecipientName: string;
   nextFeedAt: Date | null;
   upcomingDoses: MedicationDoseNotification[];
+  upcomingAppointments: AppointmentReminder[];
 };
 
 // Without this, a notification that fires while the app is foregrounded is
@@ -40,12 +52,18 @@ async function ensureAndroidChannels() {
     importance: Notifications.AndroidImportance.HIGH,
     sound: 'default',
   });
+  await Notifications.setNotificationChannelAsync(APPOINTMENT_CHANNEL_ID, {
+    name: 'Appointment reminders',
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: 'default',
+  });
 }
 
 async function doReconcile({
   careRecipientName,
   nextFeedAt,
   upcomingDoses,
+  upcomingAppointments,
 }: ReconcileNotificationsInput) {
   await ensureAndroidChannels();
 
@@ -97,6 +115,34 @@ async function doReconcile({
         type: Notifications.SchedulableTriggerInputTypes.DATE,
         date: dose.scheduledFor,
         channelId: MEDICATION_CHANNEL_ID,
+      },
+    });
+  }
+
+  for (const appointment of upcomingAppointments) {
+    const appointmentTime = appointment.scheduledFor.getTime();
+    if (appointmentTime <= now) continue;
+
+    // If the natural lead-time trigger has already passed (the appointment
+    // was booked, or reconciliation ran, inside its own lead window), clamp
+    // to fire almost immediately rather than silently dropping the
+    // reminder — this app's ethos is "no care event is silently lost".
+    const naturalTrigger = appointmentTime - APPOINTMENT_REMINDER_LEAD_MS;
+    const triggerDate = new Date(naturalTrigger > now ? naturalTrigger : now + 5_000);
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Upcoming appointment',
+        body: `${appointment.title} for ${careRecipientName} at ${appointment.scheduledFor.toLocaleTimeString(
+          [],
+          { hour: 'numeric', minute: '2-digit' }
+        )}.`,
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: triggerDate,
+        channelId: APPOINTMENT_CHANNEL_ID,
       },
     });
   }

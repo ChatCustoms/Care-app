@@ -3,8 +3,8 @@
 //
 // Hand-authored to match supabase/migrations/0001_household_and_care_recipient.sql,
 // 0002_feeding.sql, 0003_caregiver_invites.sql, 0004_diapers.sql,
-// 0005_medications.sql, and 0006_care_notes.sql (the project isn't
-// CLI-linked yet) — regenerate via the CLI once it is.
+// 0005_medications.sql, 0006_care_notes.sql, and 0007_appointments.sql (the
+// project isn't CLI-linked yet) — regenerate via the CLI once it is.
 
 type HouseholdRow = {
   id: string;
@@ -106,6 +106,19 @@ type CareNoteRow = {
   care_recipient_id: string;
   note: string;
   is_notable: boolean;
+  created_by: string;
+  created_at: string;
+};
+
+type AppointmentRow = {
+  id: string;
+  care_recipient_id: string;
+  title: string;
+  provider: string | null;
+  location: string | null;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
   created_by: string;
   created_at: string;
 };
@@ -271,6 +284,25 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'care_notes_care_recipient_id_fkey';
+            columns: ['care_recipient_id'];
+            isOneToOne: false;
+            referencedRelation: 'care_recipients';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      appointments: {
+        Row: AppointmentRow;
+        Insert: Partial<AppointmentRow> & {
+          care_recipient_id: string;
+          title: string;
+          scheduled_at: string;
+          created_by: string;
+        };
+        Update: Partial<AppointmentRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'appointments_care_recipient_id_fkey';
             columns: ['care_recipient_id'];
             isOneToOne: false;
             referencedRelation: 'care_recipients';

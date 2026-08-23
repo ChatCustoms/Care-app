@@ -37,10 +37,6 @@ import {
 import { computeTodaysDoseSlots, DoseSlotStatus } from '@/features/medications/logic';
 import { formatDuration } from '@/lib/dates/format';
 import { supabase } from '@/lib/supabase/client';
-import {
-  MedicationDoseNotification,
-  reconcileNotifications,
-} from '@/services/notifications/client';
 import { DiaperType, FeedStatus, FeedUnit } from '@/types';
 
 const DIAPER_TYPES: DiaperType[] = ['wet', 'dirty', 'both', 'dry'];
@@ -238,49 +234,6 @@ export default function TodayScreen() {
       })),
     [scheduledMedications, medicationEvents, now]
   );
-
-  const upcomingDoses: MedicationDoseNotification[] = useMemo(
-    () =>
-      medicationSlotsByMedication.flatMap(({ medication, slots }) =>
-        slots
-          .filter((slot) => slot.status === 'upcoming')
-          .map((slot) => ({
-            medicationId: medication.id,
-            medicationName: medication.name,
-            scheduledFor: slot.scheduledFor,
-          }))
-      ),
-    [medicationSlotsByMedication]
-  );
-
-  // A derived primitive, not the medications/events arrays themselves —
-  // reconcile only needs to re-run when the underlying data changes (a
-  // schedule edited, an event logged), not on every 30s `now` tick that
-  // moves a slot from upcoming to due (its notification was already
-  // scheduled ahead of time and fires at the OS level regardless).
-  const upcomingDoseSignature = useMemo(
-    () =>
-      upcomingDoses
-        .map((dose) => `${dose.medicationId}:${dose.scheduledFor.getTime()}`)
-        .sort()
-        .join(','),
-    [upcomingDoses]
-  );
-
-  // Deliberately keyed on the primitives nextFeedAt/upcomingDoses are
-  // derived from, not on nextFeedAt itself or the medications/events
-  // arrays — a freshly-constructed Date (or array) has a new identity
-  // every render, which would refire this on every render for no reason.
-  useEffect(() => {
-    if (!careRecipient) return;
-    reconcileNotifications({ careRecipientName: careRecipient.name, nextFeedAt, upcomingDoses });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    careRecipient?.id,
-    careRecipient?.feed_interval_minutes,
-    latestFeed?.fed_at,
-    upcomingDoseSignature,
-  ]);
 
   if (!careRecipient) return null;
 
