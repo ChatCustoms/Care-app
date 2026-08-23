@@ -129,6 +129,15 @@ Add an update/delete policy (scoped the same way as `feed_presets`, via
 `is_household_member`) alongside an edit/delete UI on the Today or Timeline
 screen, once that's a real, prioritized need.
 
+**Deliberate exception — `care_notes` (Milestone 8):** unlike every log
+table above, `care_notes` does support edit/delete, scoped to the note's
+own author (`created_by = auth.uid()`, not just household membership).
+Free-text content is more prone to typos than picking a preset amount or
+type, and a note's content is entirely the author's own words rather than
+a shared structured value like a feed amount — editing your own note is a
+different, lower-risk surface than editing a shared log entry, so it was
+built now rather than deferred.
+
 ---
 
 ## Medication Tracking (Milestone 7)

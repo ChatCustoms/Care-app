@@ -2,9 +2,9 @@
 // Run: npx supabase gen types typescript --project-id <your-project-id> > src/lib/supabase/database.types.ts
 //
 // Hand-authored to match supabase/migrations/0001_household_and_care_recipient.sql,
-// 0002_feeding.sql, 0003_caregiver_invites.sql, 0004_diapers.sql, and
-// 0005_medications.sql (the project isn't CLI-linked yet) — regenerate via
-// the CLI once it is.
+// 0002_feeding.sql, 0003_caregiver_invites.sql, 0004_diapers.sql,
+// 0005_medications.sql, and 0006_care_notes.sql (the project isn't
+// CLI-linked yet) — regenerate via the CLI once it is.
 
 type HouseholdRow = {
   id: string;
@@ -97,6 +97,15 @@ type MedicationEventRow = {
   status: string;
   scheduled_for: string | null;
   given_at: string;
+  created_by: string;
+  created_at: string;
+};
+
+type CareNoteRow = {
+  id: string;
+  care_recipient_id: string;
+  note: string;
+  is_notable: boolean;
   created_by: string;
   created_at: string;
 };
@@ -247,6 +256,24 @@ export type Database = {
             columns: ['medication_id'];
             isOneToOne: false;
             referencedRelation: 'medications';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      care_notes: {
+        Row: CareNoteRow;
+        Insert: Partial<CareNoteRow> & {
+          care_recipient_id: string;
+          note: string;
+          created_by: string;
+        };
+        Update: Partial<CareNoteRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'care_notes_care_recipient_id_fkey';
+            columns: ['care_recipient_id'];
+            isOneToOne: false;
+            referencedRelation: 'care_recipients';
             referencedColumns: ['id'];
           },
         ];
