@@ -2,8 +2,8 @@
 // Run: npx supabase gen types typescript --project-id <your-project-id> > src/lib/supabase/database.types.ts
 //
 // Hand-authored to match supabase/migrations/0001_household_and_care_recipient.sql,
-// 0002_feeding.sql, and 0003_caregiver_invites.sql (the project isn't
-// CLI-linked yet) — regenerate via the CLI once it is.
+// 0002_feeding.sql, 0003_caregiver_invites.sql, and 0004_diapers.sql (the
+// project isn't CLI-linked yet) — regenerate via the CLI once it is.
 
 type HouseholdRow = {
   id: string;
@@ -65,6 +65,15 @@ type HouseholdCaregiverRow = {
   email: string;
   role: string;
   joined_at: string;
+};
+
+type DiaperRow = {
+  id: string;
+  care_recipient_id: string;
+  type: string;
+  changed_at: string;
+  created_by: string;
+  created_at: string;
 };
 
 export type Database = {
@@ -159,6 +168,24 @@ export type Database = {
             columns: ['household_id'];
             isOneToOne: false;
             referencedRelation: 'households';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      diapers: {
+        Row: DiaperRow;
+        Insert: Partial<DiaperRow> & {
+          care_recipient_id: string;
+          type: string;
+          created_by: string;
+        };
+        Update: Partial<DiaperRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'diapers_care_recipient_id_fkey';
+            columns: ['care_recipient_id'];
+            isOneToOne: false;
+            referencedRelation: 'care_recipients';
             referencedColumns: ['id'];
           },
         ];

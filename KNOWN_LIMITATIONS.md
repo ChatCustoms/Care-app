@@ -100,18 +100,20 @@ architecture rather than a rewrite.
 
 ---
 
-## No Editing or Deleting Logged Feeds
+## No Editing or Deleting Logged Feeds or Diaper Changes
 
 **What the limitation is:**
-A feed, once logged (including a mis-tapped preset — e.g. logging "8 oz"
-instead of "4 oz"), cannot be edited or deleted in-app. There is no update or
-delete RLS policy on the `feeds` table.
+A feed or diaper change, once logged (including a mis-tap — e.g. logging
+"8 oz" instead of "4 oz", or "Wet" instead of "Dirty"), cannot be edited or
+deleted in-app. There is no update or delete RLS policy on the `feeds` or
+`diapers` tables.
 
 **Why it is acceptable for MVP:**
 No edit UI exists yet, and a default-deny policy is safer than granting a
 write surface for a feature that doesn't exist and can't be exercised or
 tested. A mis-logged feed skews the next-feed countdown until the next real
-feed is logged, but does not lose or corrupt other data.
+feed is logged; a mis-logged diaper change only affects the "last changed"
+display. Neither loses or corrupts other data.
 
 **Future path:**
 Add an update/delete policy (scoped the same way as `feed_presets`, via

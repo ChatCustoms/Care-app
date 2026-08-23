@@ -12,3 +12,5 @@ export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
 export type FeedUnit = 'mL' | 'oz' | 'g';
 
 export type FeedStatus = 'upcoming' | 'due_soon' | 'due' | 'overdue';
+
+export type DiaperType = 'wet' | 'dirty' | 'both' | 'dry';

@@ -7,6 +7,7 @@ import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { createDiaperChange, Diaper, fetchLatestDiaper } from '@/features/diapers/api';
 import {
   createFeed,
   Feed,
@@ -19,7 +20,16 @@ import { useHousehold } from '@/features/households/household-provider';
 import { formatDuration } from '@/lib/dates/format';
 import { supabase } from '@/lib/supabase/client';
 import { reconcileNextFeedNotification } from '@/services/notifications/client';
-import { FeedStatus, FeedUnit } from '@/types';
+import { DiaperType, FeedStatus, FeedUnit } from '@/types';
+
+const DIAPER_TYPE_LABEL: Record<DiaperType, string> = {
+  wet: 'Wet',
+  dirty: 'Dirty',
+  both: 'Both',
+  dry: 'Dry',
+};
+
+const DIAPER_TYPES: DiaperType[] = ['wet', 'dirty', 'both', 'dry'];
 
 const STATUS_COLOR: Record<FeedStatus, string | undefined> = {
   upcoming: undefined,
@@ -39,9 +49,12 @@ export default function TodayScreen() {
   const { careRecipient } = useHousehold();
   const [latestFeed, setLatestFeed] = useState<Feed | null>(null);
   const [presets, setPresets] = useState<FeedPreset[]>([]);
+  const [latestDiaper, setLatestDiaper] = useState<Diaper | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loggingPresetId, setLoggingPresetId] = useState<string | null>(null);
+  const [loggingDiaperType, setLoggingDiaperType] = useState<DiaperType | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [diaperErrorMessage, setDiaperErrorMessage] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -52,12 +65,14 @@ export default function TodayScreen() {
   const refetch = useCallback(async () => {
     if (!careRecipient) return;
     setIsLoading(true);
-    const [fetchedFeed, fetchedPresets] = await Promise.all([
+    const [fetchedFeed, fetchedPresets, fetchedDiaper] = await Promise.all([
       fetchLatestFeed(careRecipient.id),
       fetchFeedPresets(careRecipient.id),
+      fetchLatestDiaper(careRecipient.id),
     ]);
     setLatestFeed(fetchedFeed);
     setPresets(fetchedPresets);
+    setLatestDiaper(fetchedDiaper);
     setIsLoading(false);
   }, [careRecipient]);
 
@@ -109,6 +124,16 @@ export default function TodayScreen() {
         },
         () => refetch()
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'diapers',
+          filter: `care_recipient_id=eq.${careRecipient.id}`,
+        },
+        () => refetch()
+      )
       .subscribe();
 
     return () => {
@@ -147,6 +172,18 @@ export default function TodayScreen() {
       return;
     }
     if (data) setLatestFeed(data);
+  };
+
+  const handleLogDiaper = async (type: DiaperType) => {
+    setDiaperErrorMessage(null);
+    setLoggingDiaperType(type);
+    const { data, error } = await createDiaperChange(careRecipient.id, type);
+    setLoggingDiaperType(null);
+    if (error) {
+      setDiaperErrorMessage('Something went wrong logging that change. Please try again.');
+      return;
+    }
+    if (data) setLatestDiaper(data);
   };
 
   return (
@@ -205,6 +242,45 @@ export default function TodayScreen() {
             Add quick-log presets in Settings to log feeds with one tap.
           </ThemedText>
         ) : null}
+
+        <ThemedView style={styles.diaperSection}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            Diapers
+          </ThemedText>
+
+          {latestDiaper ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              Last changed: {DIAPER_TYPE_LABEL[latestDiaper.type as DiaperType]} ·{' '}
+              {formatDuration(
+                (now.getTime() - new Date(latestDiaper.changed_at).getTime()) / 60_000
+              )}{' '}
+              ago
+            </ThemedText>
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              No diaper changes logged yet.
+            </ThemedText>
+          )}
+
+          {diaperErrorMessage ? (
+            <ThemedText type="small" style={styles.errorText}>
+              {diaperErrorMessage}
+            </ThemedText>
+          ) : null}
+
+          <ThemedView style={styles.presetRow}>
+            {DIAPER_TYPES.map((type) => (
+              <PrimaryButton
+                key={type}
+                title={DIAPER_TYPE_LABEL[type]}
+                onPress={() => handleLogDiaper(type)}
+                isLoading={loggingDiaperType === type}
+                disabled={loggingDiaperType !== null}
+                style={styles.presetButton}
+              />
+            ))}
+          </ThemedView>
+        </ThemedView>
       </ThemedView>
     </SafeAreaView>
   );
@@ -221,6 +297,10 @@ const styles = StyleSheet.create({
   },
   statusBlock: {
     gap: Spacing.one,
+  },
+  diaperSection: {
+    gap: Spacing.one,
+    marginTop: Spacing.four,
   },
   presetRow: {
     flexDirection: 'row',
