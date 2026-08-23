@@ -168,7 +168,7 @@ export default function MedicationsScreen() {
                 onPress={() => handleRemove(medication)}
                 disabled={removingId === medication.id}
               >
-                <ThemedText type="link" style={styles.errorText}>
+                <ThemedText type="link" themeColor="statusCritical">
                   {removingId === medication.id ? 'Removing…' : 'Remove'}
                 </ThemedText>
               </Pressable>
@@ -223,7 +223,7 @@ export default function MedicationsScreen() {
                       setScheduleTimes((current) => current.filter((_, i) => i !== index))
                     }
                   >
-                    <ThemedText type="link" style={styles.errorText}>
+                    <ThemedText type="link" themeColor="statusCritical">
                       Remove
                     </ThemedText>
                   </Pressable>
@@ -236,7 +236,7 @@ export default function MedicationsScreen() {
           ) : null}
 
           {formError ? (
-            <ThemedText type="small" style={styles.errorText}>
+            <ThemedText type="small" themeColor="statusCritical">
               {formError}
             </ThemedText>
           ) : null}
@@ -298,8 +298,5 @@ const styles = StyleSheet.create({
   },
   timeField: {
     flex: 1,
-  },
-  errorText: {
-    color: '#D92D20',
   },
 });

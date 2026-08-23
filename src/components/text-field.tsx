@@ -29,7 +29,7 @@ export function TextField({ label, error, style, ...rest }: TextFieldProps) {
         {...rest}
       />
       {error ? (
-        <ThemedText type="small" themeColor="text" style={styles.error}>
+        <ThemedText type="small" themeColor="statusCritical">
           {error}
         </ThemedText>
       ) : null}
@@ -46,8 +46,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
-  },
-  error: {
-    color: '#D92D20',
   },
 });

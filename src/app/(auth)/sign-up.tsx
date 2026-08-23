@@ -76,7 +76,7 @@ export default function SignUpScreen() {
             textContentType="newPassword"
           />
           {errorMessage ? (
-            <ThemedText type="small" style={styles.errorText}>
+            <ThemedText type="small" themeColor="statusCritical">
               {errorMessage}
             </ThemedText>
           ) : null}
@@ -108,8 +108,5 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: Spacing.three,
-  },
-  errorText: {
-    color: '#D92D20',
   },
 });

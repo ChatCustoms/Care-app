@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, type PressableProps } from 'react-native';
 
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { ThemedText } from './themed-text';
 
@@ -10,16 +11,19 @@ export type PrimaryButtonProps = Omit<PressableProps, 'children'> & {
 };
 
 export function PrimaryButton({ title, isLoading, disabled, style, ...rest }: PrimaryButtonProps) {
+  const theme = useTheme();
   const isDisabled = disabled || isLoading;
 
   return (
     <Pressable
       style={(state) => [
         styles.button,
+        { backgroundColor: theme.tint },
         isDisabled && styles.disabled,
         typeof style === 'function' ? style(state) : style,
       ]}
       disabled={isDisabled}
+      accessibilityRole="button"
       {...rest}
     >
       {isLoading ? (
@@ -35,9 +39,9 @@ export function PrimaryButton({ title, isLoading, disabled, style, ...rest }: Pr
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#2563EB',
     borderRadius: Spacing.two,
     paddingVertical: Spacing.three,
+    minHeight: Spacing.touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },

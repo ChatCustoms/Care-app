@@ -195,7 +195,7 @@ export default function AppointmentsScreen() {
                     onPress={() => handleCancel(appointment)}
                     disabled={cancellingId === appointment.id}
                   >
-                    <ThemedText type="link" style={styles.errorText}>
+                    <ThemedText type="link" themeColor="statusCritical">
                       {cancellingId === appointment.id ? 'Cancelling…' : 'Cancel'}
                     </ThemedText>
                   </Pressable>
@@ -281,7 +281,7 @@ export default function AppointmentsScreen() {
             />
 
             {formError ? (
-              <ThemedText type="small" style={styles.errorText}>
+              <ThemedText type="small" themeColor="statusCritical">
                 {formError}
               </ThemedText>
             ) : null}
@@ -343,8 +343,5 @@ const styles = StyleSheet.create({
   },
   statusSection: {
     gap: Spacing.one,
-  },
-  errorText: {
-    color: '#D92D20',
   },
 });

@@ -1,28 +1,192 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * The app's theme system: a small catalog of user-selectable color palettes,
+ * each with a light and dark variant. Category accents (feed/diaper/
+ * medication/note/appointment) and urgency status colors are deliberately
+ * held constant across every palette — they're a semantic/wayfinding
+ * vocabulary (e.g. "diaper = blue", "overdue = red"), not part of a
+ * palette's decorative mood. What actually varies between palettes is the
+ * neutral background/text scale and the brand `tint` used for primary
+ * actions — that's what gives each palette its distinct character.
  */
 
 import { Platform } from 'react-native';
 
-export const Colors = {
+export type ThemeTokens = {
+  background: string;
+  backgroundElement: string;
+  backgroundSelected: string;
+  text: string;
+  textSecondary: string;
+  border: string;
+  tint: string;
+  feedAccent: string;
+  feedAccentSoft: string;
+  diaperAccent: string;
+  diaperAccentSoft: string;
+  medicationAccent: string;
+  medicationAccentSoft: string;
+  noteAccent: string;
+  noteAccentSoft: string;
+  appointmentAccent: string;
+  appointmentAccentSoft: string;
+  statusWarning: string;
+  statusUrgent: string;
+  statusCritical: string;
+  statusSuccess: string;
+};
+
+type NeutralTokenKey =
+  | 'background'
+  | 'backgroundElement'
+  | 'backgroundSelected'
+  | 'text'
+  | 'textSecondary'
+  | 'border'
+  | 'tint';
+type CategoryAndStatusTokens = Omit<ThemeTokens, NeutralTokenKey>;
+
+// Held constant across every palette — see file header.
+const CATEGORY_AND_STATUS_TOKENS: {
+  light: CategoryAndStatusTokens;
+  dark: CategoryAndStatusTokens;
+} = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    feedAccent: '#C7862B',
+    feedAccentSoft: '#F6E7CF',
+    diaperAccent: '#3D7EA6',
+    diaperAccentSoft: '#DCEBF3',
+    medicationAccent: '#7A5C9E',
+    medicationAccentSoft: '#EAE1F4',
+    noteAccent: '#B15A6B',
+    noteAccentSoft: '#F5DEE1',
+    appointmentAccent: '#BC5A34',
+    appointmentAccentSoft: '#F5DDCB',
+    statusWarning: '#B8730A',
+    statusUrgent: '#2E6E8E',
+    statusCritical: '#B3261E',
+    statusSuccess: '#3E7A45',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    feedAccent: '#E3A863',
+    feedAccentSoft: '#3A2E1C',
+    diaperAccent: '#7CB8DE',
+    diaperAccentSoft: '#1D2E38',
+    medicationAccent: '#B79AD9',
+    medicationAccentSoft: '#2C2438',
+    noteAccent: '#E092A0',
+    noteAccentSoft: '#392126',
+    appointmentAccent: '#E0925F',
+    appointmentAccentSoft: '#3A2519',
+    statusWarning: '#E3A63F',
+    statusUrgent: '#6FB4DA',
+    statusCritical: '#E5837C',
+    statusSuccess: '#83C08C',
   },
-} as const;
+};
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type PaletteId = 'meadow' | 'sky' | 'sunset' | 'clay';
+
+export const PALETTE_LABEL: Record<PaletteId, string> = {
+  meadow: 'Meadow',
+  sky: 'Sky',
+  sunset: 'Sunset',
+  clay: 'Clay',
+};
+
+export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens }> = {
+  meadow: {
+    light: {
+      background: '#FBFAF6',
+      backgroundElement: '#F1EEE4',
+      backgroundSelected: '#E5E1D3',
+      text: '#2B2A25',
+      textSecondary: '#6B685C',
+      border: '#DEDACB',
+      tint: '#4F7A5B',
+      ...CATEGORY_AND_STATUS_TOKENS.light,
+    },
+    dark: {
+      background: '#1B1D18',
+      backgroundElement: '#262922',
+      backgroundSelected: '#32362C',
+      text: '#F3F1E9',
+      textSecondary: '#B5B2A4',
+      border: '#3D4136',
+      tint: '#7FAE8C',
+      ...CATEGORY_AND_STATUS_TOKENS.dark,
+    },
+  },
+  sky: {
+    light: {
+      background: '#F7F9FC',
+      backgroundElement: '#EBF0F7',
+      backgroundSelected: '#DCE6F2',
+      text: '#232A33',
+      textSecondary: '#626E7C',
+      border: '#D6E0EC',
+      tint: '#3E6FA8',
+      ...CATEGORY_AND_STATUS_TOKENS.light,
+    },
+    dark: {
+      background: '#171B21',
+      backgroundElement: '#212730',
+      backgroundSelected: '#2B323D',
+      text: '#EFF2F6',
+      textSecondary: '#A9B2BF',
+      border: '#333B47',
+      tint: '#7FA9D6',
+      ...CATEGORY_AND_STATUS_TOKENS.dark,
+    },
+  },
+  sunset: {
+    light: {
+      background: '#FDF8F4',
+      backgroundElement: '#F7ECE2',
+      backgroundSelected: '#F0DFCF',
+      text: '#302420',
+      textSecondary: '#7A6459',
+      border: '#EBD9C7',
+      tint: '#C15B3E',
+      ...CATEGORY_AND_STATUS_TOKENS.light,
+    },
+    dark: {
+      background: '#201613',
+      backgroundElement: '#2B1F1B',
+      backgroundSelected: '#382A24',
+      text: '#F7ECE5',
+      textSecondary: '#C4AA9E',
+      border: '#47342C',
+      tint: '#E38867',
+      ...CATEGORY_AND_STATUS_TOKENS.dark,
+    },
+  },
+  clay: {
+    light: {
+      background: '#FAF7F3',
+      backgroundElement: '#F0EAE2',
+      backgroundSelected: '#E3DACC',
+      text: '#2C2621',
+      textSecondary: '#6E6459',
+      border: '#DED2C1',
+      tint: '#8C5A3C',
+      ...CATEGORY_AND_STATUS_TOKENS.light,
+    },
+    dark: {
+      background: '#1D1916',
+      backgroundElement: '#292420',
+      backgroundSelected: '#362F29',
+      text: '#F2ECE4',
+      textSecondary: '#B8ACA0',
+      border: '#423A33',
+      tint: '#C58C64',
+      ...CATEGORY_AND_STATUS_TOKENS.dark,
+    },
+  },
+};
+
+export const DEFAULT_PALETTE_ID: PaletteId = 'meadow';
+
+export type ThemeColor = keyof ThemeTokens;
 
 export const Fonts = Platform.select({
   ios: {
@@ -57,6 +221,8 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+  /** Minimum tap-target size (iOS HIG / Material both call for ~44pt/48dp). */
+  touchTarget: 44,
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

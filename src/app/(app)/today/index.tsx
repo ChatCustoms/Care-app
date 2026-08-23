@@ -1,8 +1,19 @@
-import { useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AppState, Pressable, ScrollView, StyleSheet, Switch } from 'react-native';
+import {
+  ActivityIndicator,
+  AppState,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Avatar } from '@/components/avatar';
+import { CareCard } from '@/components/care-card';
+import { Icon } from '@/components/icon';
 import { PrimaryButton } from '@/components/primary-button';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -35,29 +46,18 @@ import {
   MedicationEvent,
 } from '@/features/medications/api';
 import { computeTodaysDoseSlots, DoseSlotStatus } from '@/features/medications/logic';
+import { useTheme } from '@/hooks/use-theme';
 import { formatDuration } from '@/lib/dates/format';
 import { supabase } from '@/lib/supabase/client';
 import { DiaperType, FeedStatus, FeedUnit } from '@/types';
 
 const DIAPER_TYPES: DiaperType[] = ['wet', 'dirty', 'both', 'dry'];
 
-const STATUS_COLOR: Record<FeedStatus, string | undefined> = {
-  upcoming: undefined,
-  due_soon: '#D97706',
-  due: '#2563EB',
-  overdue: '#D92D20',
-};
-
 const STATUS_LABEL: Record<FeedStatus, string> = {
   upcoming: 'Next feed in',
   due_soon: 'Due soon, in',
   due: 'Due now',
   overdue: 'Overdue by',
-};
-
-const DOSE_STATUS_COLOR: Partial<Record<DoseSlotStatus, string>> = {
-  due: '#2563EB',
-  missed: '#D92D20',
 };
 
 const DOSE_STATUS_LABEL: Partial<Record<DoseSlotStatus, string>> = {
@@ -72,7 +72,15 @@ function startOfToday(): Date {
   return midnight;
 }
 
+function getGreeting(now: Date): string {
+  const hour = now.getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function TodayScreen() {
+  const theme = useTheme();
   const { session } = useSession();
   const { careRecipient } = useHousehold();
   const [latestFeed, setLatestFeed] = useState<Feed | null>(null);
@@ -235,6 +243,21 @@ export default function TodayScreen() {
     [scheduledMedications, medicationEvents, now]
   );
 
+  // Urgency colors are looked up by render (not module-level constants)
+  // since they come from the active theme/palette — status-color and its
+  // paired text label (STATUS_LABEL/DOSE_STATUS_LABEL) are shown together
+  // everywhere below, never color alone.
+  const statusColor: Record<FeedStatus, string | undefined> = {
+    upcoming: undefined,
+    due_soon: theme.statusWarning,
+    due: theme.statusUrgent,
+    overdue: theme.statusCritical,
+  };
+  const doseStatusColor: Partial<Record<DoseSlotStatus, string>> = {
+    due: theme.statusUrgent,
+    missed: theme.statusCritical,
+  };
+
   if (!careRecipient) return null;
 
   const handleLogPreset = async (preset: FeedPreset) => {
@@ -349,65 +372,97 @@ export default function TodayScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.content}>
-          <ThemedText type="title">Today</ThemedText>
-
-          {isLoading ? null : nextFeedAt && status ? (
-            <ThemedView style={styles.statusBlock}>
-              <ThemedText type="default" themeColor="textSecondary">
-                {STATUS_LABEL[status]}
+          <View style={styles.header}>
+            <View style={styles.headerText}>
+              <ThemedText type="small" themeColor="textSecondary">
+                Today
               </ThemedText>
-              {status !== 'due' ? (
-                <ThemedText
-                  type="subtitle"
-                  style={STATUS_COLOR[status] ? { color: STATUS_COLOR[status] } : undefined}
-                >
-                  {formatDuration(Math.abs(nextFeedAt.getTime() - now.getTime()) / 60_000)}
-                </ThemedText>
-              ) : null}
-            </ThemedView>
-          ) : (
-            <ThemedText type="default" themeColor="textSecondary">
-              Log your first feed to start tracking.
-            </ThemedText>
-          )}
+              <ThemedText type="subtitle">
+                {getGreeting(now)}, {careRecipient.name}
+              </ThemedText>
+            </View>
+            <Avatar name={careRecipient.name} size={48} />
+          </View>
 
-          {latestFeed ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              Last fed: {latestFeed.amount} {latestFeed.unit} ·{' '}
-              {formatDuration((now.getTime() - new Date(latestFeed.fed_at).getTime()) / 60_000)} ago
-            </ThemedText>
-          ) : null}
+          {/* Feeding is the hero card — the next-feed countdown is the
+              highest-priority information on this screen. */}
+          <View
+            style={[
+              styles.heroCard,
+              { backgroundColor: theme.feedAccentSoft, borderColor: theme.border },
+            ]}
+          >
+            <View style={styles.cardHeaderRow}>
+              <Icon name="feed" size={22} color={theme.feedAccent} />
+              <ThemedText type="smallBold" style={{ color: theme.feedAccent }}>
+                Feeding
+              </ThemedText>
+            </View>
 
-          {errorMessage ? (
-            <ThemedText type="small" style={styles.errorText}>
-              {errorMessage}
-            </ThemedText>
-          ) : null}
+            {isLoading ? null : nextFeedAt && status ? (
+              <View style={styles.heroStatusBlock}>
+                <View style={styles.heroStatusLabelRow}>
+                  {status !== 'upcoming' ? (
+                    <Icon
+                      name="warning"
+                      size={16}
+                      color={statusColor[status] ?? theme.textSecondary}
+                    />
+                  ) : null}
+                  <ThemedText type="default" themeColor="textSecondary">
+                    {STATUS_LABEL[status]}
+                  </ThemedText>
+                </View>
+                {status !== 'due' ? (
+                  <ThemedText
+                    type="title"
+                    style={statusColor[status] ? { color: statusColor[status] } : undefined}
+                  >
+                    {formatDuration(Math.abs(nextFeedAt.getTime() - now.getTime()) / 60_000)}
+                  </ThemedText>
+                ) : null}
+              </View>
+            ) : (
+              <ThemedText type="default" themeColor="textSecondary">
+                Log your first feed to start tracking.
+              </ThemedText>
+            )}
 
-          {presets.length > 0 ? (
-            <ThemedView style={styles.presetRow}>
-              {presets.map((preset) => (
-                <PrimaryButton
-                  key={preset.id}
-                  title={`${preset.amount} ${preset.unit}`}
-                  onPress={() => handleLogPreset(preset)}
-                  isLoading={loggingPresetId === preset.id}
-                  disabled={loggingPresetId !== null}
-                  style={styles.presetButton}
-                />
-              ))}
-            </ThemedView>
-          ) : !isLoading ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              Add quick-log presets in Settings to log feeds with one tap.
-            </ThemedText>
-          ) : null}
+            {latestFeed ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Last fed: {latestFeed.amount} {latestFeed.unit} ·{' '}
+                {formatDuration((now.getTime() - new Date(latestFeed.fed_at).getTime()) / 60_000)}{' '}
+                ago
+              </ThemedText>
+            ) : null}
 
-          <ThemedView style={styles.diaperSection}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Diapers
-            </ThemedText>
+            {errorMessage ? (
+              <ThemedText type="small" themeColor="statusCritical">
+                {errorMessage}
+              </ThemedText>
+            ) : null}
 
+            {presets.length > 0 ? (
+              <View style={styles.presetRow}>
+                {presets.map((preset) => (
+                  <PrimaryButton
+                    key={preset.id}
+                    title={`${preset.amount} ${preset.unit}`}
+                    onPress={() => handleLogPreset(preset)}
+                    isLoading={loggingPresetId === preset.id}
+                    disabled={loggingPresetId !== null}
+                    style={styles.presetButton}
+                  />
+                ))}
+              </View>
+            ) : !isLoading ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Add quick-log presets in Settings to log feeds with one tap.
+              </ThemedText>
+            ) : null}
+          </View>
+
+          <CareCard category="diaper" title="Diapers">
             {latestDiaper ? (
               <ThemedText type="small" themeColor="textSecondary">
                 Last changed: {DIAPER_TYPE_LABEL[latestDiaper.type as DiaperType]} ·{' '}
@@ -423,40 +478,61 @@ export default function TodayScreen() {
             )}
 
             {diaperErrorMessage ? (
-              <ThemedText type="small" style={styles.errorText}>
+              <ThemedText type="small" themeColor="statusCritical">
                 {diaperErrorMessage}
               </ThemedText>
             ) : null}
 
-            <ThemedView style={styles.presetRow}>
+            <View style={styles.diaperActionsRow}>
               {DIAPER_TYPES.map((type) => (
-                <PrimaryButton
+                <Pressable
                   key={type}
-                  title={DIAPER_TYPE_LABEL[type]}
                   onPress={() => handleLogDiaper(type)}
-                  isLoading={loggingDiaperType === type}
                   disabled={loggingDiaperType !== null}
-                  style={styles.presetButton}
-                />
+                  accessibilityRole="button"
+                  accessibilityLabel={`Log ${DIAPER_TYPE_LABEL[type]} diaper change`}
+                  style={[styles.diaperActionButton, { backgroundColor: theme.backgroundElement }]}
+                >
+                  {loggingDiaperType === type ? (
+                    <ActivityIndicator color={theme.diaperAccent} />
+                  ) : (
+                    <>
+                      <Icon name="diaper" size={22} color={theme.diaperAccent} />
+                      <ThemedText type="small" style={{ color: theme.diaperAccent }}>
+                        {DIAPER_TYPE_LABEL[type]}
+                      </ThemedText>
+                    </>
+                  )}
+                </Pressable>
               ))}
-            </ThemedView>
-          </ThemedView>
+            </View>
+          </CareCard>
 
-          <ThemedView style={styles.diaperSection}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Medications
-            </ThemedText>
-
+          <CareCard category="medication" title="Medications">
             {medicationErrorMessage ? (
-              <ThemedText type="small" style={styles.errorText}>
+              <ThemedText type="small" themeColor="statusCritical">
                 {medicationErrorMessage}
               </ThemedText>
             ) : null}
 
             {medications.length === 0 ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                Add medications in Settings to track doses here.
-              </ThemedText>
+              <View style={styles.emptyStateRow}>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.emptyStateText}>
+                  No medications tracked yet.
+                </ThemedText>
+                <Link href="/settings/medications" asChild>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Add a medication"
+                    style={styles.addMedicationButton}
+                  >
+                    <Icon name="add" size={18} color={theme.medicationAccent} />
+                    <ThemedText type="smallBold" style={{ color: theme.medicationAccent }}>
+                      Add medication
+                    </ThemedText>
+                  </Pressable>
+                </Link>
+              </View>
             ) : null}
 
             {medicationSlotsByMedication.map(({ medication, slots }) => {
@@ -469,7 +545,7 @@ export default function TodayScreen() {
               );
 
               return (
-                <ThemedView key={medication.id} style={styles.medicationRow}>
+                <View key={medication.id} style={styles.medicationRow}>
                   <ThemedText type="default">
                     {medication.name} · {medication.dosage}
                   </ThemedText>
@@ -478,22 +554,31 @@ export default function TodayScreen() {
                   </ThemedText>
 
                   {nextSlot ? (
-                    <ThemedView style={styles.doseRow}>
-                      <ThemedText
-                        type="small"
-                        style={
-                          DOSE_STATUS_COLOR[nextSlot.status]
-                            ? { color: DOSE_STATUS_COLOR[nextSlot.status] }
-                            : undefined
-                        }
-                      >
-                        {DOSE_STATUS_LABEL[nextSlot.status]} ·{' '}
-                        {nextSlot.scheduledFor.toLocaleTimeString([], {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
-                      </ThemedText>
-                      <ThemedView style={styles.presetRow}>
+                    <View style={styles.doseRow}>
+                      <View style={styles.doseStatusLabelRow}>
+                        {nextSlot.status !== 'upcoming' ? (
+                          <Icon
+                            name="warning"
+                            size={14}
+                            color={doseStatusColor[nextSlot.status] ?? theme.textSecondary}
+                          />
+                        ) : null}
+                        <ThemedText
+                          type="small"
+                          style={
+                            doseStatusColor[nextSlot.status]
+                              ? { color: doseStatusColor[nextSlot.status] }
+                              : undefined
+                          }
+                        >
+                          {DOSE_STATUS_LABEL[nextSlot.status]} ·{' '}
+                          {nextSlot.scheduledFor.toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </ThemedText>
+                      </View>
+                      <View style={styles.presetRow}>
                         <PrimaryButton
                           title="Given"
                           onPress={() =>
@@ -518,17 +603,17 @@ export default function TodayScreen() {
                           disabled={loggingDoseKey !== null}
                           style={styles.presetButton}
                         />
-                      </ThemedView>
-                    </ThemedView>
+                      </View>
+                    </View>
                   ) : null}
-                </ThemedView>
+                </View>
               );
             })}
 
             {medications
               .filter((medication) => medication.is_prn)
               .map((medication) => (
-                <ThemedView key={medication.id} style={styles.medicationRow}>
+                <View key={medication.id} style={styles.medicationRow}>
                   <ThemedText type="default">
                     {medication.name} · {medication.dosage}
                   </ThemedText>
@@ -539,18 +624,14 @@ export default function TodayScreen() {
                     disabled={loggingDoseKey !== null}
                     style={styles.presetButton}
                   />
-                </ThemedView>
+                </View>
               ))}
-          </ThemedView>
+          </CareCard>
 
-          <ThemedView style={styles.diaperSection}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Care Notes
-            </ThemedText>
-
+          <CareCard category="note" title="Care Notes">
             {latestNote ? (
-              <ThemedView style={styles.noteRow}>
-                <ThemedView style={styles.noteInfo}>
+              <View style={styles.noteRow}>
+                <View style={styles.noteInfo}>
                   <ThemedText type="default">
                     {latestNote.is_notable ? '★ ' : ''}
                     {latestNote.note}
@@ -561,20 +642,28 @@ export default function TodayScreen() {
                     )}{' '}
                     ago
                   </ThemedText>
-                </ThemedView>
+                </View>
                 {session?.user?.id === latestNote.created_by ? (
-                  <ThemedView style={styles.rowActions}>
-                    <Pressable onPress={() => startEditingNote(latestNote)}>
+                  <View style={styles.rowActions}>
+                    <Pressable
+                      onPress={() => startEditingNote(latestNote)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Edit note"
+                    >
                       <ThemedText type="link">Edit</ThemedText>
                     </Pressable>
-                    <Pressable onPress={() => handleDeleteNote(latestNote)}>
-                      <ThemedText type="link" style={styles.errorText}>
+                    <Pressable
+                      onPress={() => handleDeleteNote(latestNote)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Delete note"
+                    >
+                      <ThemedText type="link" themeColor="statusCritical">
                         Delete
                       </ThemedText>
                     </Pressable>
-                  </ThemedView>
+                  </View>
                 ) : null}
-              </ThemedView>
+              </View>
             ) : (
               <ThemedText type="small" themeColor="textSecondary">
                 No notes yet.
@@ -582,23 +671,23 @@ export default function TodayScreen() {
             )}
 
             {noteErrorMessage ? (
-              <ThemedText type="small" style={styles.errorText}>
+              <ThemedText type="small" themeColor="statusCritical">
                 {noteErrorMessage}
               </ThemedText>
             ) : null}
 
-            <ThemedView style={styles.noteForm}>
+            <View style={styles.noteForm}>
               <TextField
                 label={editingNoteId ? 'Edit note' : 'Add a note'}
                 value={noteText}
                 onChangeText={setNoteText}
                 multiline
               />
-              <ThemedView style={styles.prnRow}>
+              <View style={styles.prnRow}>
                 <ThemedText type="default">Notable</ThemedText>
                 <Switch value={noteIsNotable} onValueChange={setNoteIsNotable} />
-              </ThemedView>
-              <ThemedView style={styles.presetRow}>
+              </View>
+              <View style={styles.presetRow}>
                 <PrimaryButton
                   title={editingNoteId ? 'Save Changes' : 'Add Note'}
                   onPress={handleSaveNote}
@@ -606,13 +695,17 @@ export default function TodayScreen() {
                   style={styles.presetButton}
                 />
                 {editingNoteId ? (
-                  <Pressable onPress={cancelEditingNote}>
+                  <Pressable
+                    onPress={cancelEditingNote}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancel editing note"
+                  >
                     <ThemedText type="link">Cancel</ThemedText>
                   </Pressable>
                 ) : null}
-              </ThemedView>
-            </ThemedView>
-          </ThemedView>
+              </View>
+            </View>
+          </CareCard>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -628,21 +721,73 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.four,
+    gap: Spacing.four,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerText: {
+    gap: Spacing.half,
+  },
+  heroCard: {
+    borderRadius: Spacing.four,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: Spacing.four,
     gap: Spacing.three,
   },
-  statusBlock: {
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  heroStatusBlock: {
     gap: Spacing.one,
   },
-  diaperSection: {
+  heroStatusLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.one,
-    marginTop: Spacing.four,
+  },
+  doseStatusLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
   },
   medicationRow: {
     gap: Spacing.one,
-    marginTop: Spacing.two,
   },
   doseRow: {
     gap: Spacing.one,
+  },
+  diaperActionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  diaperActionButton: {
+    minWidth: Spacing.touchTarget * 1.6,
+    minHeight: Spacing.touchTarget,
+    borderRadius: Spacing.three,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.half,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  emptyStateRow: {
+    gap: Spacing.two,
+    alignItems: 'flex-start',
+  },
+  emptyStateText: {
+    flexShrink: 1,
+  },
+  addMedicationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    minHeight: Spacing.touchTarget,
   },
   noteRow: {
     flexDirection: 'row',
@@ -659,7 +804,6 @@ const styles = StyleSheet.create({
   },
   noteForm: {
     gap: Spacing.two,
-    marginTop: Spacing.two,
   },
   prnRow: {
     flexDirection: 'row',
@@ -670,12 +814,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.two,
-    marginTop: Spacing.three,
   },
   presetButton: {
     minWidth: 100,
-  },
-  errorText: {
-    color: '#D92D20',
   },
 });

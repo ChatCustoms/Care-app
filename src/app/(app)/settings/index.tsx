@@ -1,14 +1,16 @@
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ChipRow } from '@/components/chip-row';
+import { Icon } from '@/components/icon';
 import { PrimaryButton } from '@/components/primary-button';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UnitSelector } from '@/components/unit-selector';
-import { Spacing } from '@/constants/theme';
+import { PALETTE_LABEL, Palettes, PaletteId, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import {
   createFeedPreset,
@@ -17,7 +19,16 @@ import {
   fetchFeedPresets,
 } from '@/features/feeds/api';
 import { useHousehold } from '@/features/households/household-provider';
+import { AppearanceMode, useThemeContext } from '@/features/theme/theme-provider';
 import { FeedUnit } from '@/types';
+
+const APPEARANCE_OPTIONS: { key: AppearanceMode; label: string }[] = [
+  { key: 'system', label: 'System' },
+  { key: 'light', label: 'Light' },
+  { key: 'dark', label: 'Dark' },
+];
+
+const PALETTE_IDS = Object.keys(Palettes) as PaletteId[];
 
 export default function SettingsScreen() {
   const { signOut } = useSession();
@@ -29,6 +40,8 @@ export default function SettingsScreen() {
     refreshCaregivers,
     inviteCaregiver,
   } = useHousehold();
+  const { paletteId, setPaletteId, appearanceMode, setAppearanceMode, resolvedScheme, theme } =
+    useThemeContext();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const [inviteEmail, setInviteEmail] = useState('');
@@ -131,6 +144,45 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <ThemedText type="title">Settings</ThemedText>
 
+        <ThemedView style={styles.section}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            Appearance
+          </ThemedText>
+          <ChipRow
+            options={APPEARANCE_OPTIONS}
+            activeKey={appearanceMode}
+            onSelect={setAppearanceMode}
+          />
+          <View style={styles.paletteRow}>
+            {PALETTE_IDS.map((id) => {
+              const swatchTheme = Palettes[id][resolvedScheme];
+              const isSelected = id === paletteId;
+              return (
+                <Pressable
+                  key={id}
+                  onPress={() => setPaletteId(id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${PALETTE_LABEL[id]} palette${isSelected ? ', selected' : ''}`}
+                  style={styles.paletteOption}
+                >
+                  <View
+                    style={[
+                      styles.paletteSwatch,
+                      { backgroundColor: swatchTheme.tint },
+                      isSelected && { borderColor: theme.text, borderWidth: 2 },
+                    ]}
+                  >
+                    {isSelected ? <Icon name="check" size={18} color="#ffffff" /> : null}
+                  </View>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {PALETTE_LABEL[id]}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ThemedView>
+
         {household ? (
           <ThemedView style={styles.section}>
             <ThemedText type="smallBold" themeColor="textSecondary">
@@ -167,7 +219,7 @@ export default function SettingsScreen() {
                 keyboardType="email-address"
               />
               {inviteError ? (
-                <ThemedText type="small" style={styles.errorText}>
+                <ThemedText type="small" themeColor="statusCritical">
                   {inviteError}
                 </ThemedText>
               ) : null}
@@ -193,7 +245,7 @@ export default function SettingsScreen() {
               keyboardType="number-pad"
             />
             {intervalError ? (
-              <ThemedText type="small" style={styles.errorText}>
+              <ThemedText type="small" themeColor="statusCritical">
                 {intervalError}
               </ThemedText>
             ) : null}
@@ -220,7 +272,7 @@ export default function SettingsScreen() {
                   onPress={() => handleDeletePreset(preset)}
                   disabled={deletingPresetId === preset.id}
                 >
-                  <ThemedText type="link" style={styles.errorText}>
+                  <ThemedText type="link" themeColor="statusCritical">
                     {deletingPresetId === preset.id ? 'Removing…' : 'Remove'}
                   </ThemedText>
                 </Pressable>
@@ -236,7 +288,7 @@ export default function SettingsScreen() {
               />
               <UnitSelector value={newUnit} onChange={setNewUnit} />
               {presetError ? (
-                <ThemedText type="small" style={styles.errorText}>
+                <ThemedText type="small" themeColor="statusCritical">
                   {presetError}
                 </ThemedText>
               ) : null}
@@ -279,6 +331,25 @@ const styles = StyleSheet.create({
   section: {
     gap: Spacing.two,
   },
+  paletteRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.three,
+    marginTop: Spacing.one,
+  },
+  paletteOption: {
+    alignItems: 'center',
+    gap: Spacing.one,
+    minWidth: Spacing.touchTarget,
+    minHeight: Spacing.touchTarget,
+  },
+  paletteSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   presetRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -287,9 +358,6 @@ const styles = StyleSheet.create({
   addPresetForm: {
     gap: Spacing.two,
     marginTop: Spacing.two,
-  },
-  errorText: {
-    color: '#D92D20',
   },
   signOutButton: {
     marginTop: Spacing.three,

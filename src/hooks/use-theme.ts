@@ -1,14 +1,11 @@
+import { ThemeTokens } from '@/constants/theme';
+import { useThemeContext } from '@/features/theme/theme-provider';
+
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Returns the resolved token set for the active palette + light/dark mode.
+ * Same external shape as before this became context-backed — every call
+ * site (`const theme = useTheme()`) is unchanged.
  */
-
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+export function useTheme(): ThemeTokens {
+  return useThemeContext().theme;
 }
