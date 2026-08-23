@@ -1,8 +1,9 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ChipRow } from '@/components/chip-row';
 import { PrimaryButton } from '@/components/primary-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,7 +25,6 @@ import {
   TimelineEntry,
   TimelineEntryType,
 } from '@/features/timeline/logic';
-import { useTheme } from '@/hooks/use-theme';
 import { DiaperType, MedicationEventStatus } from '@/types';
 
 const WINDOW_INCREMENT_DAYS = 7;
@@ -103,7 +103,6 @@ function EntryRow({ entry }: { entry: TimelineEntry }) {
 }
 
 export default function TimelineScreen() {
-  const theme = useTheme();
   const { careRecipient } = useHousehold();
   const [windowDays, setWindowDays] = useState(WINDOW_INCREMENT_DAYS);
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
@@ -168,25 +167,7 @@ export default function TimelineScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <ThemedText type="title">Timeline</ThemedText>
 
-          <ThemedView style={styles.filterRow}>
-            {FILTERS.map((filter) => (
-              <Pressable
-                key={filter.key}
-                onPress={() => setActiveFilter(filter.key)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor:
-                      activeFilter === filter.key
-                        ? theme.backgroundSelected
-                        : theme.backgroundElement,
-                  },
-                ]}
-              >
-                <ThemedText type="small">{filter.label}</ThemedText>
-              </Pressable>
-            ))}
-          </ThemedView>
+          <ChipRow options={FILTERS} activeKey={activeFilter} onSelect={setActiveFilter} />
 
           {isLoading ? null : groups.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
@@ -233,16 +214,6 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.four,
     gap: Spacing.three,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-  },
-  filterChip: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.four,
   },
   daySection: {
     gap: Spacing.two,
