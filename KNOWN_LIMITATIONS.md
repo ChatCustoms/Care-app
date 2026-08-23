@@ -100,25 +100,66 @@ architecture rather than a rewrite.
 
 ---
 
-## No Editing or Deleting Logged Feeds or Diaper Changes
+## No Editing or Deleting Logged Feeds, Diaper Changes, or Medication Doses
 
 **What the limitation is:**
-A feed or diaper change, once logged (including a mis-tap — e.g. logging
-"8 oz" instead of "4 oz", or "Wet" instead of "Dirty"), cannot be edited or
-deleted in-app. There is no update or delete RLS policy on the `feeds` or
-`diapers` tables.
+A feed, diaper change, or medication dose event, once logged (including a
+mis-tap — e.g. logging "8 oz" instead of "4 oz", "Wet" instead of "Dirty",
+or "Skip" instead of "Given"), cannot be edited or deleted in-app. There is
+no update or delete RLS policy on the `feeds`, `diapers`, or
+`medication_events` tables.
+
+For medications specifically, there is also deliberately no unique
+constraint on `(medication_id, scheduled_for)` in `medication_events` — a
+corrective re-log for the same dose slot is a new row, not an edit. The
+most-recently-created event per slot is treated as authoritative (see
+`computeTodaysDoseSlots` in `src/features/medications/logic.ts`), so both
+the mistake and the correction remain in the audit trail.
 
 **Why it is acceptable for MVP:**
 No edit UI exists yet, and a default-deny policy is safer than granting a
 write surface for a feature that doesn't exist and can't be exercised or
 tested. A mis-logged feed skews the next-feed countdown until the next real
 feed is logged; a mis-logged diaper change only affects the "last changed"
-display. Neither loses or corrupts other data.
+display; a mis-logged medication dose can be corrected by re-logging the
+same slot. None lose or corrupt other data.
 
 **Future path:**
 Add an update/delete policy (scoped the same way as `feed_presets`, via
 `is_household_member`) alongside an edit/delete UI on the Today or Timeline
 screen, once that's a real, prioritized need.
+
+---
+
+## Medication Tracking (Milestone 7)
+
+**What the limitation is:**
+- Removing a medication is a soft delete (`deactivated_at` set, row never
+  physically deleted) so historical `medication_events` stay intact for
+  care history — there is no true "delete forever" action.
+- Scheduled dose times (`schedule_times`) have no date/timezone component;
+  "today's" doses are computed from the *viewing device's* local calendar
+  day. This is correct for the common case (caregivers colocated with the
+  care recipient) but means a caregiver traveling in a different timezone
+  from the child will see dose times shifted to their own local clock.
+- Missed-dose detection and medication-reminder notifications both require
+  the app to be opened or resumed on some device — there is no server-side
+  cron. This is the same architecture and the same caveat as feed-overdue
+  detection (see "Notification Synchronization" above), extended to
+  medications.
+- Editing a medication's `schedule_times` is not versioned — Today always
+  reflects the *current* schedule. If a time is removed after a dose for
+  it was already logged today, that logged event stays in
+  `medication_events` but simply stops rendering as a slot going forward.
+
+**Why it is acceptable for MVP:**
+All of the above match this app's existing architecture and conventions
+(client-driven reconciliation, no server-side jobs, device-local time
+semantics) rather than introducing a new class of limitation.
+
+**Future path:**
+Store a timezone on `care_recipients` and convert schedule times against
+it if cross-timezone caregiving becomes a real, reported need.
 
 ---
 

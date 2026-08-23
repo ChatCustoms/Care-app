@@ -2,8 +2,9 @@
 // Run: npx supabase gen types typescript --project-id <your-project-id> > src/lib/supabase/database.types.ts
 //
 // Hand-authored to match supabase/migrations/0001_household_and_care_recipient.sql,
-// 0002_feeding.sql, 0003_caregiver_invites.sql, and 0004_diapers.sql (the
-// project isn't CLI-linked yet) — regenerate via the CLI once it is.
+// 0002_feeding.sql, 0003_caregiver_invites.sql, 0004_diapers.sql, and
+// 0005_medications.sql (the project isn't CLI-linked yet) — regenerate via
+// the CLI once it is.
 
 type HouseholdRow = {
   id: string;
@@ -72,6 +73,30 @@ type DiaperRow = {
   care_recipient_id: string;
   type: string;
   changed_at: string;
+  created_by: string;
+  created_at: string;
+};
+
+// Postgres `time[]` comes back from supabase-js as a plain string array
+// (e.g. ["08:00:00", "20:00:00"]), not a typed time array.
+type MedicationRow = {
+  id: string;
+  care_recipient_id: string;
+  name: string;
+  dosage: string;
+  instructions: string | null;
+  is_prn: boolean;
+  schedule_times: string[];
+  deactivated_at: string | null;
+  created_at: string;
+};
+
+type MedicationEventRow = {
+  id: string;
+  medication_id: string;
+  status: string;
+  scheduled_for: string | null;
+  given_at: string;
   created_by: string;
   created_at: string;
 };
@@ -186,6 +211,42 @@ export type Database = {
             columns: ['care_recipient_id'];
             isOneToOne: false;
             referencedRelation: 'care_recipients';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      medications: {
+        Row: MedicationRow;
+        Insert: Partial<MedicationRow> & {
+          care_recipient_id: string;
+          name: string;
+          dosage: string;
+        };
+        Update: Partial<MedicationRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'medications_care_recipient_id_fkey';
+            columns: ['care_recipient_id'];
+            isOneToOne: false;
+            referencedRelation: 'care_recipients';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      medication_events: {
+        Row: MedicationEventRow;
+        Insert: Partial<MedicationEventRow> & {
+          medication_id: string;
+          status: string;
+          created_by: string;
+        };
+        Update: Partial<MedicationEventRow>;
+        Relationships: [
+          {
+            foreignKeyName: 'medication_events_medication_id_fkey';
+            columns: ['medication_id'];
+            isOneToOne: false;
+            referencedRelation: 'medications';
             referencedColumns: ['id'];
           },
         ];

@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -246,6 +246,14 @@ export default function SettingsScreen() {
                 isLoading={isAddingPreset}
               />
             </ThemedView>
+          </ThemedView>
+        ) : null}
+
+        {careRecipient ? (
+          <ThemedView style={styles.section}>
+            <Link href="/settings/medications">
+              <ThemedText type="linkPrimary">Manage medications</ThemedText>
+            </Link>
           </ThemedView>
         ) : null}
 
