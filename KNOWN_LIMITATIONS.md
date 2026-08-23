@@ -47,27 +47,44 @@ caregiving issues in practice.
 
 ---
 
-## Widget Support
+## iOS Home Screen Widget (Milestone 12)
 
-**What the limitation is:**
-iOS Home Screen widgets, iOS Live Activities, and Android Home Screen widgets are
-not implemented in the MVP.
+**What is implemented:**
+A `systemLarge`-only Home Screen widget (`targets/widget/`, built with
+`@bacons/apple-targets` — hand-written Swift/SwiftUI, not the newer alpha
+`expo-widgets`) showing feed status, medication status, and three buttons
+(Log Feed / Log Medication / Log Diaper). All three buttons deep-link to
+`careapp://today` — none of them log anything without the app coming to
+the foreground first, and none of them differentiate by section. The
+widget never calls Supabase directly: the main app computes a
+pre-computed timeline of upcoming status transitions (reusing
+`getFeedStatus`'s and `computeTodaysDoseSlots`'s exact threshold logic)
+and writes it to a shared App Group (`group.com.stephanochatham.careapp`)
+via `src/features/notifications/use-sync-widget-storage.ts`; the widget
+only reads that.
 
-**Why it is deferred:**
-Widgets require native platform extensions (Swift/WidgetKit for iOS,
-Kotlin/Jetpack Glance for Android) that can only be built and tested with local
-development builds. The core caregiving workflow — logging, countdown, timeline,
-notifications — must be stable before widget state can be reliably derived from it.
+**What is NOT implemented:**
+- No Live Activity (Lock Screen / Dynamic Island) — a meaningfully larger
+  second system (ActivityKit start/update/end lifecycle), deferred to a
+  future milestone.
+- No Android widget yet — Milestone 13.
+- No `systemSmall`/`systemMedium` size variants — only the largest size,
+  since two status lines plus three buttons doesn't fit smaller families.
+- No true no-launch interactive buttons (iOS 17 AppIntents). That would
+  require duplicating Supabase auth-token access and a network write
+  inside the widget extension process — a new security surface with zero
+  precedent in this codebase. Tapping a button opens the app instead.
 
-**Architecture note:**
-The application is designed so widgets can be added later without refactoring. All
-care state is computed from the same business logic functions (`calculateNextFeed`,
-`getFeedStatus`, etc.) that widgets will also use. Widgets will read pre-computed
-state written to a shared App Group (iOS) or SharedPreferences (Android) by the
-main app — they will not call Supabase directly.
+**Build/signing caveat:**
+Development so far is Simulator-only (`expo run:ios`, no device, no EAS).
+App Groups provision automatically there; real-device testing will need
+the group id registered under an actual Apple Developer Team ID.
 
 **Future path:**
-Implement after Milestone 11 (Appointments) when the core product is stable.
+Add a Live Activity once the Home Screen widget is proven stable in
+practice; add Android widget support in Milestone 13; revisit
+`expo-widgets` once it's out of alpha if it would meaningfully reduce the
+amount of hand-written Swift this app carries.
 
 ---
 

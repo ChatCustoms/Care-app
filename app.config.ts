@@ -14,6 +14,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: 'com.stephanochatham.careapp',
     // supportsTablet: false — this is a phone-first caregiving app.
     supportsTablet: false,
+    // App Group for the widget extension (Milestone 12) to share
+    // pre-computed feed/medication status with the main app — the widget
+    // never calls Supabase directly. Referenced (not duplicated) by
+    // targets/widget/expo-target.config.js so the two can't drift apart.
+    entitlements: {
+      'com.apple.security.application-groups': ['group.com.stephanochatham.careapp'],
+    },
   },
   android: {
     package: 'com.stephanochatham.careapp',
@@ -33,6 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-secure-store',
     'expo-notifications',
+    '@bacons/apple-targets',
     [
       'expo-splash-screen',
       {

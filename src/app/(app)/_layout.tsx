@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 
 import { useReconcileNotifications } from '@/features/notifications/use-reconcile-notifications';
+import { useSyncWidgetStorage } from '@/features/notifications/use-sync-widget-storage';
 
 // Icons will be added when polishing the UI.
 // Using stable Tabs (not the unstable NativeTabs experiment from the template).
@@ -9,6 +10,9 @@ export default function AppLayout() {
   // for why this can't live in a per-tab screen (Tabs unmount inactive
   // screens; this layout is the only component mounted across tab switches).
   useReconcileNotifications();
+  // A sibling, not part of the hook above — see its own comment for why
+  // widget-storage sync is kept separate from notification reconciliation.
+  useSyncWidgetStorage();
 
   return (
     <Tabs
