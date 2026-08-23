@@ -25,6 +25,19 @@ export async function fetchActiveMedications(careRecipientId: string): Promise<M
   return data;
 }
 
+// Unlike fetchActiveMedications, includes deactivated medications — Timeline
+// needs names for historical doses even after a medication is removed.
+export async function fetchAllMedications(careRecipientId: string): Promise<Medication[]> {
+  const { data, error } = await supabase
+    .from('medications')
+    .select('*')
+    .eq('care_recipient_id', careRecipientId)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
 // Scoped by medication ids (not a direct care_recipient_id column — that
 // column doesn't exist on medication_events, only on medications) rather
 // than an embedded join, to keep the query simple: fetch active

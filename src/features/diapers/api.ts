@@ -19,6 +19,18 @@ export async function fetchLatestDiaper(careRecipientId: string): Promise<Diaper
   return data;
 }
 
+export async function fetchDiapersSince(careRecipientId: string, since: Date): Promise<Diaper[]> {
+  const { data, error } = await supabase
+    .from('diapers')
+    .select('*')
+    .eq('care_recipient_id', careRecipientId)
+    .gte('changed_at', since.toISOString())
+    .order('changed_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function createDiaperChange(
   careRecipientId: string,
   type: DiaperType

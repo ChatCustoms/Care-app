@@ -20,6 +20,18 @@ export async function fetchLatestFeed(careRecipientId: string): Promise<Feed | n
   return data;
 }
 
+export async function fetchFeedsSince(careRecipientId: string, since: Date): Promise<Feed[]> {
+  const { data, error } = await supabase
+    .from('feeds')
+    .select('*')
+    .eq('care_recipient_id', careRecipientId)
+    .gte('fed_at', since.toISOString())
+    .order('fed_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function fetchFeedPresets(careRecipientId: string): Promise<FeedPreset[]> {
   const { data, error } = await supabase
     .from('feed_presets')

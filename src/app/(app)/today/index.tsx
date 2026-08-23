@@ -17,6 +17,7 @@ import {
   updateCareNote,
 } from '@/features/careNotes/api';
 import { createDiaperChange, Diaper, fetchLatestDiaper } from '@/features/diapers/api';
+import { DIAPER_TYPE_LABEL } from '@/features/diapers/logic';
 import {
   createFeed,
   Feed,
@@ -41,13 +42,6 @@ import {
   reconcileNotifications,
 } from '@/services/notifications/client';
 import { DiaperType, FeedStatus, FeedUnit } from '@/types';
-
-const DIAPER_TYPE_LABEL: Record<DiaperType, string> = {
-  wet: 'Wet',
-  dirty: 'Dirty',
-  both: 'Both',
-  dry: 'Dry',
-};
 
 const DIAPER_TYPES: DiaperType[] = ['wet', 'dirty', 'both', 'dry'];
 

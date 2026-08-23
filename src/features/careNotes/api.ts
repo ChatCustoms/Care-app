@@ -18,6 +18,21 @@ export async function fetchLatestCareNote(careRecipientId: string): Promise<Care
   return data;
 }
 
+export async function fetchCareNotesSince(
+  careRecipientId: string,
+  since: Date
+): Promise<CareNote[]> {
+  const { data, error } = await supabase
+    .from('care_notes')
+    .select('*')
+    .eq('care_recipient_id', careRecipientId)
+    .gte('created_at', since.toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function createCareNote(
   careRecipientId: string,
   note: string,
