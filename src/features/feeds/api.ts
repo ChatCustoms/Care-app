@@ -76,21 +76,6 @@ export async function createFeedPreset(
   return { data, error };
 }
 
-export async function updateFeedPreset(
-  id: string,
-  amount: string,
-  unit: FeedUnit
-): Promise<{ data: FeedPreset | null; error: PostgrestError | null }> {
-  const { data, error } = await supabase
-    .from('feed_presets')
-    .update({ amount, unit })
-    .eq('id', id)
-    .select()
-    .single();
-
-  return { data, error };
-}
-
 export async function deleteFeedPreset(id: string): Promise<{ error: PostgrestError | null }> {
   const { error } = await supabase.from('feed_presets').delete().eq('id', id);
   return { error };

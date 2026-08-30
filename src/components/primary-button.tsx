@@ -27,9 +27,9 @@ export function PrimaryButton({ title, isLoading, disabled, style, ...rest }: Pr
       {...rest}
     >
       {isLoading ? (
-        <ActivityIndicator color="#ffffff" />
+        <ActivityIndicator color={theme.tintText} />
       ) : (
-        <ThemedText type="smallBold" style={styles.title}>
+        <ThemedText type="smallBold" style={{ color: theme.tintText }}>
           {title}
         </ThemedText>
       )}
@@ -47,8 +47,5 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
-  },
-  title: {
-    color: '#ffffff',
   },
 });

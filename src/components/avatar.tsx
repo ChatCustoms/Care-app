@@ -47,7 +47,7 @@ export function Avatar({ uri, name, size = 48 }: AvatarProps) {
       accessible
       accessibilityLabel={`${name}'s avatar`}
     >
-      <ThemedText type="smallBold" style={[styles.initials, { fontSize: size * 0.38 }]}>
+      <ThemedText type="smallBold" style={{ fontSize: size * 0.38, color: theme.tintText }}>
         {getInitials(name)}
       </ThemedText>
     </View>
@@ -61,8 +61,5 @@ const styles = StyleSheet.create({
   fallback: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  initials: {
-    color: '#ffffff',
   },
 });

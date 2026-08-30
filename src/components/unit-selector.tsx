@@ -24,6 +24,9 @@ export function UnitSelector({ value, onChange }: UnitSelectorProps) {
           <Pressable
             key={unit}
             onPress={() => onChange(unit)}
+            accessibilityRole="button"
+            accessibilityLabel={unit}
+            accessibilityState={{ selected: isSelected }}
             style={[
               styles.chip,
               { backgroundColor: isSelected ? theme.backgroundSelected : theme.backgroundElement },

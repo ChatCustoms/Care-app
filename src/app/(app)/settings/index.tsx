@@ -10,6 +10,7 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UnitSelector } from '@/components/unit-selector';
+import { MAX_FEED_INTERVAL_MINUTES, MIN_FEED_INTERVAL_MINUTES } from '@/constants/feeding';
 import { PALETTE_LABEL, Palettes, PaletteId, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
 import {
@@ -98,8 +99,14 @@ export default function SettingsScreen() {
   const handleSaveInterval = async () => {
     setIntervalError(null);
     const minutes = Number(intervalInput);
-    if (!Number.isInteger(minutes) || minutes <= 0) {
-      setIntervalError('Please enter a whole number of minutes greater than 0.');
+    if (
+      !Number.isInteger(minutes) ||
+      minutes < MIN_FEED_INTERVAL_MINUTES ||
+      minutes > MAX_FEED_INTERVAL_MINUTES
+    ) {
+      setIntervalError(
+        `Please enter a whole number of minutes between ${MIN_FEED_INTERVAL_MINUTES} and ${MAX_FEED_INTERVAL_MINUTES}.`
+      );
       return;
     }
     setIsSavingInterval(true);
@@ -173,7 +180,9 @@ export default function SettingsScreen() {
                         isSelected && { borderColor: theme.text, borderWidth: 2 },
                       ]}
                     >
-                      {isSelected ? <Icon name="check" size={18} color="#ffffff" /> : null}
+                      {isSelected ? (
+                        <Icon name="check" size={18} color={swatchTheme.tintText} />
+                      ) : null}
                     </View>
                     <ThemedText type="small" themeColor="textSecondary">
                       {PALETTE_LABEL[id]}
@@ -272,6 +281,8 @@ export default function SettingsScreen() {
                   <Pressable
                     onPress={() => handleDeletePreset(preset)}
                     disabled={deletingPresetId === preset.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${preset.amount} ${preset.unit} preset`}
                   >
                     <ThemedText type="link" themeColor="statusCritical">
                       {deletingPresetId === preset.id ? 'Removing…' : 'Remove'}

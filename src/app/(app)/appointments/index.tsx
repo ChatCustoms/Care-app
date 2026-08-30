@@ -188,12 +188,18 @@ export default function AppointmentsScreen() {
                   </ThemedText>
                 </ThemedView>
                 <ThemedView style={styles.rowActions}>
-                  <Pressable onPress={() => startEditing(appointment)}>
+                  <Pressable
+                    onPress={() => startEditing(appointment)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Edit ${appointment.title}`}
+                  >
                     <ThemedText type="link">Edit</ThemedText>
                   </Pressable>
                   <Pressable
                     onPress={() => handleCancel(appointment)}
                     disabled={cancellingId === appointment.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Cancel ${appointment.title}`}
                   >
                     <ThemedText type="link" themeColor="statusCritical">
                       {cancellingId === appointment.id ? 'Cancelling…' : 'Cancel'}
@@ -225,7 +231,11 @@ export default function AppointmentsScreen() {
                     <ThemedText type="small">{appointment.notes}</ThemedText>
                   ) : null}
                 </ThemedView>
-                <Pressable onPress={() => startEditing(appointment)}>
+                <Pressable
+                  onPress={() => startEditing(appointment)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Edit ${appointment.title}`}
+                >
                   <ThemedText type="link">Edit</ThemedText>
                 </Pressable>
               </ThemedView>
@@ -292,7 +302,11 @@ export default function AppointmentsScreen() {
               isLoading={isSaving}
             />
             {editingId ? (
-              <Pressable onPress={resetForm}>
+              <Pressable
+                onPress={resetForm}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel editing"
+              >
                 <ThemedText type="link">Cancel editing</ThemedText>
               </Pressable>
             ) : null}

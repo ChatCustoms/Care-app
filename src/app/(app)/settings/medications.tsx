@@ -162,12 +162,18 @@ export default function MedicationsScreen() {
                 </ThemedText>
               </ThemedView>
               <ThemedView style={styles.rowActions}>
-                <Pressable onPress={() => startEditing(medication)}>
+                <Pressable
+                  onPress={() => startEditing(medication)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Edit ${medication.name}`}
+                >
                   <ThemedText type="link">Edit</ThemedText>
                 </Pressable>
                 <Pressable
                   onPress={() => handleRemove(medication)}
                   disabled={removingId === medication.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${medication.name}`}
                 >
                   <ThemedText type="link" themeColor="statusCritical">
                     {removingId === medication.id ? 'Removing…' : 'Remove'}
@@ -223,6 +229,8 @@ export default function MedicationsScreen() {
                       onPress={() =>
                         setScheduleTimes((current) => current.filter((_, i) => i !== index))
                       }
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove time ${index + 1}`}
                     >
                       <ThemedText type="link" themeColor="statusCritical">
                         Remove
@@ -230,7 +238,11 @@ export default function MedicationsScreen() {
                     </Pressable>
                   </ThemedView>
                 ))}
-                <Pressable onPress={() => setScheduleTimes((current) => [...current, ''])}>
+                <Pressable
+                  onPress={() => setScheduleTimes((current) => [...current, ''])}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add another time"
+                >
                   <ThemedText type="linkPrimary">+ Add another time</ThemedText>
                 </Pressable>
               </ThemedView>
@@ -248,7 +260,11 @@ export default function MedicationsScreen() {
               isLoading={isSaving}
             />
             {editingId ? (
-              <Pressable onPress={resetForm}>
+              <Pressable
+                onPress={resetForm}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel editing"
+              >
                 <ThemedText type="link">Cancel editing</ThemedText>
               </Pressable>
             ) : null}

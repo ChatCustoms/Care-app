@@ -28,6 +28,9 @@ export function ChipRow<T extends string | number>({
           <Pressable
             key={option.key}
             onPress={() => onSelect(option.key)}
+            accessibilityRole="button"
+            accessibilityLabel={option.label}
+            accessibilityState={{ selected: isActive }}
             style={[
               styles.chip,
               { backgroundColor: isActive ? theme.backgroundSelected : theme.backgroundElement },

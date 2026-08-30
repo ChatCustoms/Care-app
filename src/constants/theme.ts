@@ -19,6 +19,14 @@ export type ThemeTokens = {
   textSecondary: string;
   border: string;
   tint: string;
+  /**
+   * Text/icon color for content drawn on top of `tint` (e.g. white on a
+   * primary button). Not always white — this app's dark-mode tints are
+   * deliberately light/pastel accents against a dark background, so white
+   * text on them fails WCAG contrast; authored per palette+scheme rather
+   * than computed, matching how the rest of this theme system works.
+   */
+  tintText: string;
   feedAccent: string;
   feedAccentSoft: string;
   diaperAccent: string;
@@ -42,7 +50,8 @@ type NeutralTokenKey =
   | 'text'
   | 'textSecondary'
   | 'border'
-  | 'tint';
+  | 'tint'
+  | 'tintText';
 type CategoryAndStatusTokens = Omit<ThemeTokens, NeutralTokenKey>;
 
 // Held constant across every palette — see file header.
@@ -103,6 +112,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#6B685C',
       border: '#DEDACB',
       tint: '#4F7A5B',
+      tintText: '#FFFFFF',
       ...CATEGORY_AND_STATUS_TOKENS.light,
     },
     dark: {
@@ -113,6 +123,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#B5B2A4',
       border: '#3D4136',
       tint: '#7FAE8C',
+      tintText: '#000000',
       ...CATEGORY_AND_STATUS_TOKENS.dark,
     },
   },
@@ -125,6 +136,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#626E7C',
       border: '#D6E0EC',
       tint: '#3E6FA8',
+      tintText: '#FFFFFF',
       ...CATEGORY_AND_STATUS_TOKENS.light,
     },
     dark: {
@@ -135,6 +147,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#A9B2BF',
       border: '#333B47',
       tint: '#7FA9D6',
+      tintText: '#000000',
       ...CATEGORY_AND_STATUS_TOKENS.dark,
     },
   },
@@ -147,6 +160,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#7A6459',
       border: '#EBD9C7',
       tint: '#C15B3E',
+      tintText: '#000000',
       ...CATEGORY_AND_STATUS_TOKENS.light,
     },
     dark: {
@@ -157,6 +171,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#C4AA9E',
       border: '#47342C',
       tint: '#E38867',
+      tintText: '#000000',
       ...CATEGORY_AND_STATUS_TOKENS.dark,
     },
   },
@@ -169,6 +184,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#6E6459',
       border: '#DED2C1',
       tint: '#8C5A3C',
+      tintText: '#FFFFFF',
       ...CATEGORY_AND_STATUS_TOKENS.light,
     },
     dark: {
@@ -179,6 +195,7 @@ export const Palettes: Record<PaletteId, { light: ThemeTokens; dark: ThemeTokens
       textSecondary: '#B8ACA0',
       border: '#423A33',
       tint: '#C58C64',
+      tintText: '#000000',
       ...CATEGORY_AND_STATUS_TOKENS.dark,
     },
   },
@@ -224,6 +241,3 @@ export const Spacing = {
   /** Minimum tap-target size (iOS HIG / Material both call for ~44pt/48dp). */
   touchTarget: 44,
 } as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
