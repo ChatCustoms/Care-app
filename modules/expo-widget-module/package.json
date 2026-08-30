@@ -1,0 +1,7 @@
+{
+  "name": "expo-widget-module",
+  "version": "0.1.0",
+  "description": "Local Expo Module for the Android Home Screen widget (Care App).",
+  "main": "src/ExpoWidgetModule.ts",
+  "private": true
+}

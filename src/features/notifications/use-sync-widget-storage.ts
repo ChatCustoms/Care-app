@@ -1,4 +1,3 @@
-import { ExtensionStorage } from '@bacons/apple-targets';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
@@ -13,14 +12,8 @@ import {
   MedicationEvent,
 } from '@/features/medications/api';
 import { buildWidgetPayload } from '@/features/widget/logic';
+import { writeWidgetPayload } from '@/features/widget/native-storage';
 import { supabase } from '@/lib/supabase/client';
-
-// Must match app.config.ts's ios.entitlements App Group and
-// targets/widget/widgets.swift's appGroupId — there's no way to thread a
-// single TS constant into the Swift source, so this is a second,
-// unavoidable place the group id has to be kept in sync by hand.
-const APP_GROUP_ID = 'group.com.stephanochatham.careapp';
-const WIDGET_PAYLOAD_KEY = 'widgetPayload';
 
 function startOfToday(): Date {
   const midnight = new Date();
@@ -115,8 +108,8 @@ export function useSyncWidgetStorage() {
   const scheduledMedications = useMemo(() => medications.filter((m) => !m.is_prn), [medications]);
 
   // A derived signature, not the payload object itself — a freshly-built
-  // payload has a new identity every render, which would write to
-  // ExtensionStorage (and burn part of iOS's widget-reload budget) on
+  // payload has a new identity every render, which would write to native
+  // widget storage (and burn part of the OS's widget-reload budget) on
   // every render for no reason.
   const payloadSignature = useMemo(() => {
     if (!careRecipient) return '';
@@ -136,8 +129,6 @@ export function useSyncWidgetStorage() {
 
   useEffect(() => {
     if (!careRecipient || !payloadSignature) return;
-    const storage = new ExtensionStorage(APP_GROUP_ID);
-    storage.set(WIDGET_PAYLOAD_KEY, payloadSignature);
-    ExtensionStorage.reloadWidget();
+    writeWidgetPayload(JSON.parse(payloadSignature));
   }, [careRecipient, payloadSignature]);
 }

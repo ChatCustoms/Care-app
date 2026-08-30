@@ -42,6 +42,11 @@ example
 /ios
 /android
 
+# Gradle build output for local Expo modules (the module's own source
+# under android/ is committed; this is just its build cache)
+modules/*/android/build/
+modules/*/android/.cxx/
+
 # Supabase local config (if using supabase CLI locally)
 supabase/.env
 supabase/.temp

@@ -13,6 +13,17 @@ const TAB_ICON: Record<string, IconName> = {
   settings: 'settings',
 };
 
+// route.name isn't always the bare screen name: a leaf `index.tsx` with no
+// sibling `_layout.tsx` (today, timeline, summary, appointments) is named
+// e.g. "today/index", while a screen that owns its own nested layout
+// (settings, which has settings/_layout.tsx for its medications sub-screen)
+// keeps the bare directory name "settings". Strip the trailing segment so
+// every route resolves the same way.
+function tabIconName(routeName: string): IconName {
+  const key = routeName.replace(/\/index$/, '');
+  return TAB_ICON[key];
+}
+
 // Using stable Tabs (not the unstable NativeTabs experiment from the template).
 export default function AppLayout() {
   const theme = useTheme();
@@ -33,7 +44,7 @@ export default function AppLayout() {
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: { backgroundColor: theme.background, borderTopColor: theme.border },
         tabBarIcon: ({ color, size }) => (
-          <Icon name={TAB_ICON[route.name]} color={color} size={size} />
+          <Icon name={tabIconName(route.name)} color={color} size={size} />
         ),
       })}
     >

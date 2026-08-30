@@ -41,6 +41,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-secure-store',
     'expo-notifications',
     '@bacons/apple-targets',
+    './modules/expo-widget-module/app.plugin.js',
     [
       'expo-splash-screen',
       {

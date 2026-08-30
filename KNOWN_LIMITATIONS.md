@@ -82,9 +82,57 @@ the group id registered under an actual Apple Developer Team ID.
 
 **Future path:**
 Add a Live Activity once the Home Screen widget is proven stable in
-practice; add Android widget support in Milestone 13; revisit
-`expo-widgets` once it's out of alpha if it would meaningfully reduce the
-amount of hand-written Swift this app carries.
+practice; revisit `expo-widgets` once it's out of alpha if it would
+meaningfully reduce the amount of hand-written Swift this app carries.
+
+---
+
+## Android Home Screen Widget (Milestone 13)
+
+**What is implemented:**
+A fixed-size Home Screen widget (`modules/expo-widget-module/`, a local
+Expo Module — no config-plugin tool equivalent to `@bacons/apple-targets`
+exists for Android) built with Jetpack Glance, showing the same content as
+the iOS widget: feed status, medication status, and three
+`careapp://today` deep-link buttons. The widget reads a JSON payload from
+a single-key `Preferences DataStore`, written by the same
+`src/features/notifications/use-sync-widget-storage.ts` hook that drives
+the iOS widget — `src/features/widget/native-storage.{ios,android}.ts`
+splits the actual write call per platform, but the payload shape and the
+data it's derived from (`src/features/widget/logic.ts`) are identical
+across both.
+
+**What is NOT implemented / the key platform difference from iOS:**
+Jetpack Glance has no equivalent to WidgetKit's precomputed `Timeline` —
+an iOS widget can be handed a set of future dated entries and the OS
+walks through them with zero further app involvement; a Glance widget
+only ever renders its *current* state and must be told to re-render.
+Three layers cover this:
+- A 30-minute periodic update (`updatePeriodMillis`, the OS-enforced
+  minimum) as the reliability floor.
+- An immediate re-render on every payload write (covers the common case:
+  app foregrounded, a Realtime event arrives).
+- A single `WorkManager` one-off request, scheduled by the native module
+  itself (not JS) for the next real status transition, replaced on every
+  new payload write.
+
+No `SCHEDULE_EXACT_ALARM` permission is used (gated behind a user-granted
+permission on API 33+, not auto-granted outside the alarm/clock app
+category) and no `AlarmManager` exact scheduling — `WorkManager` degrades
+gracefully to the 30-minute floor if the OS defers it under Doze/App
+Standby. **Worst case, the Android widget can show a status up to ~30
+minutes stale**; iOS's `Timeline` mechanism has no equivalent gap. Also:
+- Fixed size only — no resizing (`resizeMode="none"`), matching iOS's
+  `systemLarge`-only scope.
+- Same "no auto-log" button philosophy as iOS: tapping a button opens the
+  app rather than writing directly from the widget process, to avoid
+  duplicating Supabase auth-token access outside the main app.
+
+**Future path:**
+If the ~30-minute worst-case staleness proves to be a real problem in
+practice, consider requesting `SCHEDULE_EXACT_ALARM` (with its user-facing
+permission prompt) for tighter precision — deferred for now since the
+`WorkManager` middle ground covers the common cases without it.
 
 ---
 

@@ -48,5 +48,12 @@
     "format": "prettier --write 'src/**/*.{ts,tsx}'",
     "typecheck": "tsc --noEmit"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "autolinking": {
+      "searchPaths": [
+        "./modules"
+      ]
+    }
+  }
 }
