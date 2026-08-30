@@ -11,6 +11,7 @@ import {
   Medication,
   MedicationEvent,
 } from '@/features/medications/api';
+import { useThemeContext } from '@/features/theme/theme-provider';
 import { buildWidgetPayload } from '@/features/widget/logic';
 import { writeWidgetPayload } from '@/features/widget/native-storage';
 import { supabase } from '@/lib/supabase/client';
@@ -28,6 +29,7 @@ function startOfToday(): Date {
 // widget must stay in sync regardless of what's on screen.
 export function useSyncWidgetStorage() {
   const { careRecipient } = useHousehold();
+  const { theme } = useThemeContext();
   const [latestFeed, setLatestFeed] = useState<Feed | null>(null);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [medicationEvents, setMedicationEvents] = useState<MedicationEvent[]>([]);
@@ -121,11 +123,12 @@ export function useSyncWidgetStorage() {
       ),
       scheduledMedications,
       medicationEvents,
-      new Date()
+      new Date(),
+      theme
     );
     return JSON.stringify(payload);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [careRecipient, latestFeed?.fed_at, scheduledMedications, medicationEvents]);
+  }, [careRecipient, latestFeed?.fed_at, scheduledMedications, medicationEvents, theme]);
 
   useEffect(() => {
     if (!careRecipient || !payloadSignature) return;

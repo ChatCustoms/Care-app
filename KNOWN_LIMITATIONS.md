@@ -122,8 +122,13 @@ category) and no `AlarmManager` exact scheduling — `WorkManager` degrades
 gracefully to the 30-minute floor if the OS defers it under Doze/App
 Standby. **Worst case, the Android widget can show a status up to ~30
 minutes stale**; iOS's `Timeline` mechanism has no equivalent gap. Also:
-- Fixed size only — no resizing (`resizeMode="none"`), matching iOS's
-  `systemLarge`-only scope.
+- Resizable (`resizeMode="horizontal|vertical"`), unlike iOS's
+  `systemLarge`-only scope. Two layouts are declared via Glance's
+  `SizeMode.Responsive`: a compact size (feed status only — the single
+  highest-priority signal) and the original full layout (feed + medication
+  status, three buttons). The OS picks whichever declared size best fits
+  the widget's actual on-screen dimensions; no app-process involvement
+  needed on resize.
 - Same "no auto-log" button philosophy as iOS: tapping a button opens the
   app rather than writing directly from the widget process, to avoid
   duplicating Supabase auth-token access outside the main app.

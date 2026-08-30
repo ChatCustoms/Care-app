@@ -140,187 +140,192 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <ThemedText type="title">Settings</ThemedText>
+    <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <ThemedText type="title">Settings</ThemedText>
 
-        <ThemedView style={styles.section}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            Appearance
-          </ThemedText>
-          <ChipRow
-            options={APPEARANCE_OPTIONS}
-            activeKey={appearanceMode}
-            onSelect={setAppearanceMode}
-          />
-          <View style={styles.paletteRow}>
-            {PALETTE_IDS.map((id) => {
-              const swatchTheme = Palettes[id][resolvedScheme];
-              const isSelected = id === paletteId;
-              return (
-                <Pressable
-                  key={id}
-                  onPress={() => setPaletteId(id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${PALETTE_LABEL[id]} palette${isSelected ? ', selected' : ''}`}
-                  style={styles.paletteOption}
-                >
-                  <View
-                    style={[
-                      styles.paletteSwatch,
-                      { backgroundColor: swatchTheme.tint },
-                      isSelected && { borderColor: theme.text, borderWidth: 2 },
-                    ]}
+          <ThemedView style={styles.section}>
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              Appearance
+            </ThemedText>
+            <ChipRow
+              options={APPEARANCE_OPTIONS}
+              activeKey={appearanceMode}
+              onSelect={setAppearanceMode}
+            />
+            <View style={styles.paletteRow}>
+              {PALETTE_IDS.map((id) => {
+                const swatchTheme = Palettes[id][resolvedScheme];
+                const isSelected = id === paletteId;
+                return (
+                  <Pressable
+                    key={id}
+                    onPress={() => setPaletteId(id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${PALETTE_LABEL[id]} palette${isSelected ? ', selected' : ''}`}
+                    style={styles.paletteOption}
                   >
-                    {isSelected ? <Icon name="check" size={18} color="#ffffff" /> : null}
-                  </View>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {PALETTE_LABEL[id]}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ThemedView>
-
-        {household ? (
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Household
-            </ThemedText>
-            <ThemedText type="default">{household.name}</ThemedText>
-            {careRecipient ? (
-              <ThemedText type="default">
-                {careRecipient.name}
-                {careRecipient.date_of_birth ? ` (born ${careRecipient.date_of_birth})` : ''}
-              </ThemedText>
-            ) : null}
+                    <View
+                      style={[
+                        styles.paletteSwatch,
+                        { backgroundColor: swatchTheme.tint },
+                        isSelected && { borderColor: theme.text, borderWidth: 2 },
+                      ]}
+                    >
+                      {isSelected ? <Icon name="check" size={18} color="#ffffff" /> : null}
+                    </View>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {PALETTE_LABEL[id]}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
           </ThemedView>
-        ) : null}
 
-        {household ? (
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Caregivers
-            </ThemedText>
-
-            {caregivers.map((caregiver) => (
-              <ThemedText key={caregiver.user_id} type="default">
-                {caregiver.email} · {caregiver.role}
+          {household ? (
+            <ThemedView style={styles.section}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Household
               </ThemedText>
-            ))}
-
-            <ThemedView style={styles.addPresetForm}>
-              <TextField
-                label="Invite a caregiver by email"
-                value={inviteEmail}
-                onChangeText={setInviteEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-              {inviteError ? (
-                <ThemedText type="small" themeColor="statusCritical">
-                  {inviteError}
-                </ThemedText>
-              ) : null}
-              {inviteSuccess ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  Invite sent.
-                </ThemedText>
-              ) : null}
-              <PrimaryButton title="Send Invite" onPress={handleInvite} isLoading={isInviting} />
-            </ThemedView>
-          </ThemedView>
-        ) : null}
-
-        {careRecipient ? (
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Feed interval
-            </ThemedText>
-            <TextField
-              label="Minutes between feeds"
-              value={intervalInput}
-              onChangeText={setIntervalInput}
-              keyboardType="number-pad"
-            />
-            {intervalError ? (
-              <ThemedText type="small" themeColor="statusCritical">
-                {intervalError}
-              </ThemedText>
-            ) : null}
-            <PrimaryButton
-              title="Save Interval"
-              onPress={handleSaveInterval}
-              isLoading={isSavingInterval}
-            />
-          </ThemedView>
-        ) : null}
-
-        {careRecipient ? (
-          <ThemedView style={styles.section}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Quick-log presets
-            </ThemedText>
-
-            {presets.map((preset) => (
-              <ThemedView key={preset.id} style={styles.presetRow}>
+              <ThemedText type="default">{household.name}</ThemedText>
+              {careRecipient ? (
                 <ThemedText type="default">
-                  {preset.amount} {preset.unit}
+                  {careRecipient.name}
+                  {careRecipient.date_of_birth ? ` (born ${careRecipient.date_of_birth})` : ''}
                 </ThemedText>
-                <Pressable
-                  onPress={() => handleDeletePreset(preset)}
-                  disabled={deletingPresetId === preset.id}
-                >
-                  <ThemedText type="link" themeColor="statusCritical">
-                    {deletingPresetId === preset.id ? 'Removing…' : 'Remove'}
-                  </ThemedText>
-                </Pressable>
-              </ThemedView>
-            ))}
+              ) : null}
+            </ThemedView>
+          ) : null}
 
-            <ThemedView style={styles.addPresetForm}>
+          {household ? (
+            <ThemedView style={styles.section}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Caregivers
+              </ThemedText>
+
+              {caregivers.map((caregiver) => (
+                <ThemedText key={caregiver.user_id} type="default">
+                  {caregiver.email} · {caregiver.role}
+                </ThemedText>
+              ))}
+
+              <ThemedView style={styles.addPresetForm}>
+                <TextField
+                  label="Invite a caregiver by email"
+                  value={inviteEmail}
+                  onChangeText={setInviteEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+                {inviteError ? (
+                  <ThemedText type="small" themeColor="statusCritical">
+                    {inviteError}
+                  </ThemedText>
+                ) : null}
+                {inviteSuccess ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Invite sent.
+                  </ThemedText>
+                ) : null}
+                <PrimaryButton title="Send Invite" onPress={handleInvite} isLoading={isInviting} />
+              </ThemedView>
+            </ThemedView>
+          ) : null}
+
+          {careRecipient ? (
+            <ThemedView style={styles.section}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Feed interval
+              </ThemedText>
               <TextField
-                label="Amount"
-                value={newAmount}
-                onChangeText={setNewAmount}
-                keyboardType="decimal-pad"
+                label="Minutes between feeds"
+                value={intervalInput}
+                onChangeText={setIntervalInput}
+                keyboardType="number-pad"
               />
-              <UnitSelector value={newUnit} onChange={setNewUnit} />
-              {presetError ? (
+              {intervalError ? (
                 <ThemedText type="small" themeColor="statusCritical">
-                  {presetError}
+                  {intervalError}
                 </ThemedText>
               ) : null}
               <PrimaryButton
-                title="Add Preset"
-                onPress={handleAddPreset}
-                isLoading={isAddingPreset}
+                title="Save Interval"
+                onPress={handleSaveInterval}
+                isLoading={isSavingInterval}
               />
             </ThemedView>
-          </ThemedView>
-        ) : null}
+          ) : null}
 
-        {careRecipient ? (
-          <ThemedView style={styles.section}>
-            <Link href="/settings/medications">
-              <ThemedText type="linkPrimary">Manage medications</ThemedText>
-            </Link>
-          </ThemedView>
-        ) : null}
+          {careRecipient ? (
+            <ThemedView style={styles.section}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Quick-log presets
+              </ThemedText>
 
-        <PrimaryButton
-          title="Sign Out"
-          onPress={handleSignOut}
-          isLoading={isSigningOut}
-          style={styles.signOutButton}
-        />
-      </ScrollView>
-    </SafeAreaView>
+              {presets.map((preset) => (
+                <ThemedView key={preset.id} style={styles.presetRow}>
+                  <ThemedText type="default">
+                    {preset.amount} {preset.unit}
+                  </ThemedText>
+                  <Pressable
+                    onPress={() => handleDeletePreset(preset)}
+                    disabled={deletingPresetId === preset.id}
+                  >
+                    <ThemedText type="link" themeColor="statusCritical">
+                      {deletingPresetId === preset.id ? 'Removing…' : 'Remove'}
+                    </ThemedText>
+                  </Pressable>
+                </ThemedView>
+              ))}
+
+              <ThemedView style={styles.addPresetForm}>
+                <TextField
+                  label="Amount"
+                  value={newAmount}
+                  onChangeText={setNewAmount}
+                  keyboardType="decimal-pad"
+                />
+                <UnitSelector value={newUnit} onChange={setNewUnit} />
+                {presetError ? (
+                  <ThemedText type="small" themeColor="statusCritical">
+                    {presetError}
+                  </ThemedText>
+                ) : null}
+                <PrimaryButton
+                  title="Add Preset"
+                  onPress={handleAddPreset}
+                  isLoading={isAddingPreset}
+                />
+              </ThemedView>
+            </ThemedView>
+          ) : null}
+
+          {careRecipient ? (
+            <ThemedView style={styles.section}>
+              <Link href="/settings/medications">
+                <ThemedText type="linkPrimary">Manage medications</ThemedText>
+              </Link>
+            </ThemedView>
+          ) : null}
+
+          <PrimaryButton
+            title="Sign Out"
+            onPress={handleSignOut}
+            isLoading={isSigningOut}
+            style={styles.signOutButton}
+          />
+        </ScrollView>
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
   },

@@ -45,17 +45,14 @@ async function ensureAndroidChannels() {
   await Notifications.setNotificationChannelAsync(FEED_CHANNEL_ID, {
     name: 'Feed reminders',
     importance: Notifications.AndroidImportance.HIGH,
-    sound: 'default',
   });
   await Notifications.setNotificationChannelAsync(MEDICATION_CHANNEL_ID, {
     name: 'Medication reminders',
     importance: Notifications.AndroidImportance.HIGH,
-    sound: 'default',
   });
   await Notifications.setNotificationChannelAsync(APPOINTMENT_CHANNEL_ID, {
     name: 'Appointment reminders',
     importance: Notifications.AndroidImportance.HIGH,
-    sound: 'default',
   });
 }
 

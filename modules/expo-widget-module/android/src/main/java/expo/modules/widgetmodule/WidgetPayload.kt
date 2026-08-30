@@ -1,5 +1,6 @@
 package expo.modules.widgetmodule
 
+import android.graphics.Color
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -15,10 +16,24 @@ data class WidgetFeedEntry(val status: String, val validFrom: Long)
 
 data class WidgetMedicationEntry(val status: String, val validFrom: Long, val medicationName: String)
 
+// Int here is an Android ARGB color int (android.graphics.Color / Compose's
+// Color(Int) constructor both take this form) — parsed once from the JS
+// side's "#RRGGBB" hex strings so the widget never touches string colors.
+data class WidgetTheme(
+  val background: Int,
+  val text: Int,
+  val textSecondary: Int,
+  val backgroundElement: Int,
+  val statusWarning: Int,
+  val statusUrgent: Int,
+  val statusCritical: Int
+)
+
 data class WidgetPayload(
   val careRecipientName: String,
   val feedEntries: List<WidgetFeedEntry>,
-  val medicationEntries: List<WidgetMedicationEntry>
+  val medicationEntries: List<WidgetMedicationEntry>,
+  val theme: WidgetTheme?
 )
 
 // date.toISOString() in JS always produces exactly this format (3
@@ -33,6 +48,31 @@ private fun parseIsoDate(value: String): Long? = try {
   isoFormat.parse(value)?.time
 } catch (error: Exception) {
   null
+}
+
+private fun parseHexColor(value: String): Int? = try {
+  Color.parseColor(value)
+} catch (error: IllegalArgumentException) {
+  null
+}
+
+// Never lets a single malformed color field sink the whole theme (and with
+// it, every other widget content) — falls back to null, which the widget
+// renders with its built-in default colors, same "degrade gracefully"
+// philosophy as a missing/malformed payload entirely.
+private fun parseWidgetTheme(json: JSONObject): WidgetTheme? {
+  val theme = json.optJSONObject("theme") ?: return null
+  fun color(key: String): Int? = theme.optString(key, "").let { if (it.isEmpty()) null else parseHexColor(it) }
+
+  val background = color("background") ?: return null
+  val text = color("text") ?: return null
+  val textSecondary = color("textSecondary") ?: return null
+  val backgroundElement = color("backgroundElement") ?: return null
+  val statusWarning = color("statusWarning") ?: return null
+  val statusUrgent = color("statusUrgent") ?: return null
+  val statusCritical = color("statusCritical") ?: return null
+
+  return WidgetTheme(background, text, textSecondary, backgroundElement, statusWarning, statusUrgent, statusCritical)
 }
 
 // version exists so a future JS-side field addition that predates a
@@ -61,7 +101,12 @@ fun parseWidgetPayload(json: String): WidgetPayload? = try {
         }
       }
     }
-    WidgetPayload(root.getString("careRecipientName"), feedEntries, medicationEntries)
+    WidgetPayload(
+      root.getString("careRecipientName"),
+      feedEntries,
+      medicationEntries,
+      parseWidgetTheme(root)
+    )
   }
 } catch (error: Exception) {
   null

@@ -44,6 +44,12 @@ class ExpoWidgetModule : Module() {
       } else {
         workManager.cancelUniqueWork(TRANSITION_WORK_NAME)
       }
+
+      // WorkManager's enqueue/cancel calls above return an Operation, which
+      // would otherwise become this Coroutine's resolved value — and the
+      // bridge doesn't know how to serialize it ("Unknown type: class
+      // androidx.work.impl.OperationImpl"), failing every call.
+      Unit
     }
   }
 }

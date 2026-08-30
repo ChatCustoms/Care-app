@@ -1,4 +1,5 @@
 import { FEED_DUE_SOON_MINUTES, FEED_OVERDUE_GRACE_MINUTES } from '@/constants/feeding';
+import { ThemeTokens } from '@/constants/theme';
 import { getFeedStatus } from '@/features/feeds/logic';
 import { Medication, MedicationEvent } from '@/features/medications/api';
 import { computeTodaysDoseSlots, MISSED_GRACE_PERIOD_MINUTES } from '@/features/medications/logic';
@@ -13,11 +14,40 @@ export type WidgetMedicationEntry = {
   medicationName: string;
 };
 
+// Just the tokens a widget actually renders with — a widget process never
+// needs the full ThemeTokens set (borders, selection states, every
+// category accent). Field names match ThemeTokens verbatim so this is
+// obviously "a subset of the real theme," not a bespoke color scheme that
+// could drift from what the app itself looks like.
+export type WidgetThemeColors = Pick<
+  ThemeTokens,
+  | 'background'
+  | 'text'
+  | 'textSecondary'
+  | 'backgroundElement'
+  | 'statusWarning'
+  | 'statusUrgent'
+  | 'statusCritical'
+>;
+
+function pickWidgetTheme(theme: ThemeTokens): WidgetThemeColors {
+  return {
+    background: theme.background,
+    text: theme.text,
+    textSecondary: theme.textSecondary,
+    backgroundElement: theme.backgroundElement,
+    statusWarning: theme.statusWarning,
+    statusUrgent: theme.statusUrgent,
+    statusCritical: theme.statusCritical,
+  };
+}
+
 export type WidgetPayload = {
   version: typeof WIDGET_PAYLOAD_VERSION;
   careRecipientName: string;
   feedEntries: WidgetFeedEntry[];
   medicationEntries: WidgetMedicationEntry[];
+  theme: WidgetThemeColors;
 };
 
 // The four canonical transition timestamps derived from nextFeedAt alone —
@@ -98,12 +128,14 @@ export function buildWidgetPayload(
   nextFeedAt: Date | null,
   scheduledMedications: Medication[],
   medicationEvents: MedicationEvent[],
-  now: Date
+  now: Date,
+  theme: ThemeTokens
 ): WidgetPayload {
   return {
     version: WIDGET_PAYLOAD_VERSION,
     careRecipientName,
     feedEntries: computeFeedWidgetEntries(nextFeedAt, now),
     medicationEntries: computeMedicationWidgetEntries(scheduledMedications, medicationEvents, now),
+    theme: pickWidgetTheme(theme),
   };
 }

@@ -140,124 +140,129 @@ export default function MedicationsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Link href="/settings">
-          <ThemedText type="link">← Back to Settings</ThemedText>
-        </Link>
+    <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Link href="/settings">
+            <ThemedText type="link">← Back to Settings</ThemedText>
+          </Link>
 
-        <ThemedText type="title">Medications</ThemedText>
+          <ThemedText type="title">Medications</ThemedText>
 
-        {medications.map((medication) => (
-          <ThemedView key={medication.id} style={styles.medicationRow}>
-            <ThemedView style={styles.medicationInfo}>
-              <ThemedText type="default">
-                {medication.name} · {medication.dosage}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {medication.is_prn
-                  ? 'As needed'
-                  : medication.schedule_times.map((t) => t.slice(0, 5)).join(', ')}
-              </ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.rowActions}>
-              <Pressable onPress={() => startEditing(medication)}>
-                <ThemedText type="link">Edit</ThemedText>
-              </Pressable>
-              <Pressable
-                onPress={() => handleRemove(medication)}
-                disabled={removingId === medication.id}
-              >
-                <ThemedText type="link" themeColor="statusCritical">
-                  {removingId === medication.id ? 'Removing…' : 'Remove'}
+          {medications.map((medication) => (
+            <ThemedView key={medication.id} style={styles.medicationRow}>
+              <ThemedView style={styles.medicationInfo}>
+                <ThemedText type="default">
+                  {medication.name} · {medication.dosage}
                 </ThemedText>
-              </Pressable>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {medication.is_prn
+                    ? 'As needed'
+                    : medication.schedule_times.map((t) => t.slice(0, 5)).join(', ')}
+                </ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.rowActions}>
+                <Pressable onPress={() => startEditing(medication)}>
+                  <ThemedText type="link">Edit</ThemedText>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleRemove(medication)}
+                  disabled={removingId === medication.id}
+                >
+                  <ThemedText type="link" themeColor="statusCritical">
+                    {removingId === medication.id ? 'Removing…' : 'Remove'}
+                  </ThemedText>
+                </Pressable>
+              </ThemedView>
             </ThemedView>
-          </ThemedView>
-        ))}
+          ))}
 
-        <ThemedView style={styles.form}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            {editingId ? 'Edit medication' : 'Add a medication'}
-          </ThemedText>
-
-          <TextField label="Name" value={name} onChangeText={setName} />
-          <TextField
-            label="Dosage"
-            value={dosage}
-            onChangeText={setDosage}
-            placeholder="e.g. 5mg"
-          />
-          <TextField
-            label="Instructions (optional)"
-            value={instructions}
-            onChangeText={setInstructions}
-          />
-
-          <ThemedView style={styles.prnRow}>
-            <ThemedText type="default">As needed (no schedule)</ThemedText>
-            <Switch value={isPrn} onValueChange={setIsPrn} />
-          </ThemedView>
-
-          {!isPrn ? (
-            <ThemedView style={styles.timesSection}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                Scheduled times
-              </ThemedText>
-              {scheduleTimes.map((time, index) => (
-                <ThemedView key={index} style={styles.timeRow}>
-                  <ThemedView style={styles.timeField}>
-                    <TextField
-                      label={`Time ${index + 1} (HH:MM)`}
-                      value={time}
-                      onChangeText={(value) =>
-                        setScheduleTimes((current) =>
-                          current.map((t, i) => (i === index ? value : t))
-                        )
-                      }
-                      keyboardType="numbers-and-punctuation"
-                    />
-                  </ThemedView>
-                  <Pressable
-                    onPress={() =>
-                      setScheduleTimes((current) => current.filter((_, i) => i !== index))
-                    }
-                  >
-                    <ThemedText type="link" themeColor="statusCritical">
-                      Remove
-                    </ThemedText>
-                  </Pressable>
-                </ThemedView>
-              ))}
-              <Pressable onPress={() => setScheduleTimes((current) => [...current, ''])}>
-                <ThemedText type="linkPrimary">+ Add another time</ThemedText>
-              </Pressable>
-            </ThemedView>
-          ) : null}
-
-          {formError ? (
-            <ThemedText type="small" themeColor="statusCritical">
-              {formError}
+          <ThemedView style={styles.form}>
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              {editingId ? 'Edit medication' : 'Add a medication'}
             </ThemedText>
-          ) : null}
 
-          <PrimaryButton
-            title={editingId ? 'Save Changes' : 'Add Medication'}
-            onPress={handleSave}
-            isLoading={isSaving}
-          />
-          {editingId ? (
-            <Pressable onPress={resetForm}>
-              <ThemedText type="link">Cancel editing</ThemedText>
-            </Pressable>
-          ) : null}
-        </ThemedView>
-      </ScrollView>
-    </SafeAreaView>
+            <TextField label="Name" value={name} onChangeText={setName} />
+            <TextField
+              label="Dosage"
+              value={dosage}
+              onChangeText={setDosage}
+              placeholder="e.g. 5mg"
+            />
+            <TextField
+              label="Instructions (optional)"
+              value={instructions}
+              onChangeText={setInstructions}
+            />
+
+            <ThemedView style={styles.prnRow}>
+              <ThemedText type="default">As needed (no schedule)</ThemedText>
+              <Switch value={isPrn} onValueChange={setIsPrn} />
+            </ThemedView>
+
+            {!isPrn ? (
+              <ThemedView style={styles.timesSection}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  Scheduled times
+                </ThemedText>
+                {scheduleTimes.map((time, index) => (
+                  <ThemedView key={index} style={styles.timeRow}>
+                    <ThemedView style={styles.timeField}>
+                      <TextField
+                        label={`Time ${index + 1} (HH:MM)`}
+                        value={time}
+                        onChangeText={(value) =>
+                          setScheduleTimes((current) =>
+                            current.map((t, i) => (i === index ? value : t))
+                          )
+                        }
+                        keyboardType="numbers-and-punctuation"
+                      />
+                    </ThemedView>
+                    <Pressable
+                      onPress={() =>
+                        setScheduleTimes((current) => current.filter((_, i) => i !== index))
+                      }
+                    >
+                      <ThemedText type="link" themeColor="statusCritical">
+                        Remove
+                      </ThemedText>
+                    </Pressable>
+                  </ThemedView>
+                ))}
+                <Pressable onPress={() => setScheduleTimes((current) => [...current, ''])}>
+                  <ThemedText type="linkPrimary">+ Add another time</ThemedText>
+                </Pressable>
+              </ThemedView>
+            ) : null}
+
+            {formError ? (
+              <ThemedText type="small" themeColor="statusCritical">
+                {formError}
+              </ThemedText>
+            ) : null}
+
+            <PrimaryButton
+              title={editingId ? 'Save Changes' : 'Add Medication'}
+              onPress={handleSave}
+              isLoading={isSaving}
+            />
+            {editingId ? (
+              <Pressable onPress={resetForm}>
+                <ThemedText type="link">Cancel editing</ThemedText>
+              </Pressable>
+            ) : null}
+          </ThemedView>
+        </ScrollView>
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
   },
